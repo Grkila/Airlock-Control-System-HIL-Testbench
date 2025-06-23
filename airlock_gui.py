@@ -11,27 +11,44 @@ import random
 class AirlockGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Airlock HIL Simulator")
-        self.root.geometry("1800x1000")  # Made even wider to accommodate both panels
-        self.root.configure(bg='#1a1a1a')
+        self.root.title("ERC Airlock HIL Simulator - Mars Mission Control")
+        self.root.geometry("1800x1000")
+        
+        # ERC Mars Theme Colors (from STYLE.MD)
+        self.colors = {
+            'mars_orange': '#FF6B35',
+            'deep_mars': '#E55100', 
+            'martian_sunset': '#FF8F65',
+            'space_black': '#1A1A1A',
+            'rover_dark': '#2D2D2D',
+            'shadow_brown': '#3E2723',
+            'mission_yellow': '#FFB300',
+            'system_green': '#4CAF50',
+            'alert_red': '#F44336',
+            'tech_blue': '#2196F3',
+            'primary_text': '#FFFFFF',
+            'secondary_text': '#CCCCCC'
+        }
+        
+        self.root.configure(bg=self.colors['space_black'])
         
         # Serial connection
         self.ser = None
         self.connected = False
         
         # Airlock dimensions (scaled down for display)
-        self.scale = 0.5  # Reduced scale to fit better with terminal
-        self.airlock_width = 1376 * self.scale  # Updated total width: 408 + 560 + 408
+        self.scale = 0.5
+        self.airlock_width = 1376 * self.scale
         self.front_zone_width = 408 * self.scale
         self.middle_zone_width = 560 * self.scale
-        self.back_zone_width = 408 * self.scale  # Changed to match front zone
-        self.airlock_height = 175  # Reduced height by half to make room for sensor states
+        self.back_zone_width = 408 * self.scale
+        self.airlock_height = 175
         
-        # Rover properties
-        self.rover_width = 638 * self.scale * 0.4  # Made much smaller for easier movement
-        self.rover_height = 35  # Also smaller height
-        self.rover_x = 50  # Start position - outside front zone
-        self.rover_y = self.airlock_height // 2 + 50  # Adjust for canvas position
+        # Rover properties - enhanced for ERC theme
+        self.rover_width = 638 * self.scale * 0.4
+        self.rover_height = 35
+        self.rover_x = 50
+        self.rover_y = self.airlock_height // 2 + 50
         self.rover_dragging = False
         
         # Gate properties
@@ -46,15 +63,15 @@ class AirlockGUI:
         self.gate_animation_progress_b = 0
         
         # Enhanced animation properties
-        self.gate_a_animation_time = 0  # Time elapsed during animation
+        self.gate_a_animation_time = 0
         self.gate_b_animation_time = 0
-        self.gate_animation_duration = 3.0  # Total animation duration in seconds
-        self.gate_a_particles = []  # Particle effects for gate A
-        self.gate_b_particles = []  # Particle effects for gate B
+        self.gate_animation_duration = 3.0
+        self.gate_a_particles = []
+        self.gate_b_particles = []
         
         # Gate movement direction tracking
-        self.gate_a_target_state = False  # True = opening, False = closing
-        self.gate_b_target_state = False  # True = opening, False = closing
+        self.gate_a_target_state = False
+        self.gate_b_target_state = False
         
         # Drawing positions
         self.start_x = 100
@@ -80,7 +97,7 @@ class AirlockGUI:
         # Anti-flicker system
         self.update_pending = False
         self.last_update_time = 0
-        self.min_update_interval = 0.1  # Minimum 100ms between updates
+        self.min_update_interval = 0.1
         
         # Control flags
         self.needs_redraw = True
@@ -88,98 +105,121 @@ class AirlockGUI:
         self.setup_gui()
         self.start_reading_thread()
         self.start_animation_thread()
-        self.start_sensor_update_thread()  # Add periodic sensor updates
-        self.start_sensor_display_update_thread()  # Add periodic sensor display updates
+        self.start_sensor_update_thread()
+        self.start_sensor_display_update_thread()
         
     def setup_gui(self):
-        # Main title
-        title_label = tk.Label(self.root, text="Airlock HIL Simulator", 
-                              font=('Arial', 24, 'bold'), 
-                              fg='white', bg='#1a1a1a')
-        title_label.pack(pady=10)
+        # Main title with ERC styling
+        title_frame = tk.Frame(self.root, bg=self.colors['space_black'])
+        title_frame.pack(pady=15)
         
-        # Connection frame
-        conn_frame = tk.Frame(self.root, bg='#1a1a1a')
-        conn_frame.pack(pady=5)
+        # ERC mission header
+        title_label = tk.Label(title_frame, text="EUROPEAN ROVER CHALLENGE", 
+                              font=('Arial', 28, 'bold'), 
+                              fg=self.colors['mars_orange'], bg=self.colors['space_black'])
+        title_label.pack()
         
-        tk.Label(conn_frame, text="COM Port:", 
-                font=('Arial', 12), fg='white', bg='#1a1a1a').pack(side=tk.LEFT, padx=5)
+        subtitle_label = tk.Label(title_frame, text="Mars Airlock HIL Simulator", 
+                                 font=('Arial', 16), 
+                                 fg=self.colors['secondary_text'], bg=self.colors['space_black'])
+        subtitle_label.pack()
+        
+        # Connection frame with Mars theme
+        conn_frame = tk.Frame(self.root, bg=self.colors['rover_dark'], relief='raised', bd=2)
+        conn_frame.pack(pady=10, padx=20, fill='x')
+        
+        # Internal padding frame
+        conn_inner = tk.Frame(conn_frame, bg=self.colors['rover_dark'])
+        conn_inner.pack(pady=8, padx=15, fill='x')
+        
+        tk.Label(conn_inner, text="Mission Control Link:", 
+                font=('Arial', 12, 'bold'), fg=self.colors['primary_text'], bg=self.colors['rover_dark']).pack(side=tk.LEFT, padx=5)
         
         self.port_var = tk.StringVar()
-        self.port_combo = ttk.Combobox(conn_frame, textvariable=self.port_var, 
+        self.port_combo = ttk.Combobox(conn_inner, textvariable=self.port_var, 
                                       values=self.get_serial_ports(), width=15)
         self.port_combo.pack(side=tk.LEFT, padx=5)
         
-        self.connect_btn = tk.Button(conn_frame, text="Connect", 
+        # Styled buttons with ERC theme
+        self.connect_btn = tk.Button(conn_inner, text="ESTABLISH LINK", 
                                    command=self.toggle_connection,
-                                   bg='#4CAF50', fg='white', font=('Arial', 10, 'bold'))
+                                   bg=self.colors['system_green'], fg=self.colors['primary_text'], 
+                                   font=('Arial', 10, 'bold'), relief='raised', bd=3)
         self.connect_btn.pack(side=tk.LEFT, padx=5)
         
-        self.refresh_btn = tk.Button(conn_frame, text="Refresh Ports", 
+        self.refresh_btn = tk.Button(conn_inner, text="SCAN PORTS", 
                                    command=self.refresh_ports,
-                                   bg='#2196F3', fg='white', font=('Arial', 10))
+                                   bg=self.colors['tech_blue'], fg=self.colors['primary_text'], 
+                                   font=('Arial', 10, 'bold'), relief='raised', bd=3)
         self.refresh_btn.pack(side=tk.LEFT, padx=5)
         
-        # Status label
-        self.status_label = tk.Label(self.root, text="Disconnected", 
-                                   font=('Arial', 12), fg='red', bg='#1a1a1a')
+        # Status label with enhanced styling
+        self.status_label = tk.Label(self.root, text="◯ COMMUNICATION OFFLINE", 
+                                   font=('Arial', 14, 'bold'), fg=self.colors['alert_red'], 
+                                   bg=self.colors['space_black'])
         self.status_label.pack(pady=5)
         
-        # Create main content frame with two columns
-        main_frame = tk.Frame(self.root, bg='#1a1a1a')
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10)
+        # Create main content frame with Mars theme
+        main_frame = tk.Frame(self.root, bg=self.colors['space_black'])
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=15)
         
         # Left column for airlock visualization
-        left_frame = tk.Frame(main_frame, bg='#1a1a1a')
+        left_frame = tk.Frame(main_frame, bg=self.colors['space_black'])
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
-        # Canvas for airlock visualization - reduced height to make room for sensor table
+        # Mission control header
+        mission_header = tk.Label(left_frame, text="🚀 MARS SURFACE OPERATIONS", 
+                                 font=('Arial', 16, 'bold'), 
+                                 fg=self.colors['mars_orange'], bg=self.colors['space_black'])
+        mission_header.pack(pady=(0, 10))
+        
+        # Canvas with Mars atmosphere background
         self.canvas = tk.Canvas(left_frame, width=1000, height=250, 
-                               bg='#2b2b2b', highlightthickness=0)
+                               bg=self.colors['deep_mars'], highlightthickness=0, relief='sunken', bd=3)
         self.canvas.pack(pady=5)
         
         # Make canvas focusable for keyboard events
         self.canvas.focus_set()
         
-        # Sensor status frame - positioned right below canvas with normal padding
-        sensor_frame = tk.LabelFrame(left_frame, text="Sensor States", 
-                                   font=('Arial', 12, 'bold'), 
-                                   fg='white', bg='#1a1a1a',
-                                   labelanchor='n')
-        sensor_frame.pack(pady=(5, 10), fill='x')  # Normal positive padding
+        # Sensor status frame with enhanced ERC styling
+        sensor_frame = tk.LabelFrame(left_frame, text="📡 SENSOR TELEMETRY", 
+                                   font=('Arial', 14, 'bold'), 
+                                   fg=self.colors['primary_text'], bg=self.colors['rover_dark'],
+                                   relief='raised', bd=3, labelanchor='n')
+        sensor_frame.pack(pady=(10, 10), fill='x')
         
-        # Create horizontal sensor table
+        # Create horizontal sensor table with Mars theme
         self.sensor_labels = {}
         
         # Main container for horizontal layout
-        table_container = tk.Frame(sensor_frame, bg='#1a1a1a')
-        table_container.pack(fill='x', padx=10, pady=5)
+        table_container = tk.Frame(sensor_frame, bg=self.colors['rover_dark'])
+        table_container.pack(fill='x', padx=15, pady=10)
         
         # First row sensors
         first_row_sensors = ['PRESENCE_FRONT', 'PRESENCE_MIDDLE', 'PRESENCE_BACK', 
                             'GATE_SAFETY_A', 'GATE_SAFETY_B']
         
         # First row container
-        first_row = tk.Frame(table_container, bg='#1a1a1a')
-        first_row.pack(fill='x', pady=(0, 3))
+        first_row = tk.Frame(table_container, bg=self.colors['rover_dark'])
+        first_row.pack(fill='x', pady=(0, 5))
         
         # Create first row with equal distribution
         for i, sensor_name in enumerate(first_row_sensors):
-            sensor_col = tk.Frame(first_row, bg='#1a1a1a')
-            sensor_col.pack(side=tk.LEFT, fill='x', expand=True, padx=2)
+            sensor_col = tk.Frame(first_row, bg=self.colors['rover_dark'])
+            sensor_col.pack(side=tk.LEFT, fill='x', expand=True, padx=3)
             
-            # Sensor name label (top)
+            # Sensor name label with Mars styling
             name_label = tk.Label(sensor_col, text=sensor_name, 
                                  font=('Arial', 9, 'bold'), 
-                                 fg='white', bg='#333333',
-                                 relief='raised', bd=1, pady=2)
+                                 fg=self.colors['primary_text'], bg=self.colors['shadow_brown'],
+                                 relief='raised', bd=2, pady=3)
             name_label.pack(fill='x')
             
-            # State label (bottom)
-            state_label = tk.Label(sensor_col, text="OFF", 
+            # State label with enhanced styling
+            state_label = tk.Label(sensor_col, text="OFFLINE", 
                                   font=('Arial', 10, 'bold'), 
-                                  fg='white', bg='#4a4a4a',
-                                  relief='raised', bd=1, pady=4)
+                                  fg=self.colors['secondary_text'], bg=self.colors['space_black'],
+                                  relief='sunken', bd=2, pady=4)
             state_label.pack(fill='x')
             
             self.sensor_labels[sensor_name] = state_label
@@ -188,94 +228,98 @@ class AirlockGUI:
         second_row_sensors = ['GATE_MOVING_A', 'GATE_MOVING_B', 'GATE_REQUEST_A', 'GATE_REQUEST_B']
         
         # Second row container
-        second_row = tk.Frame(table_container, bg='#1a1a1a')
-        second_row.pack(fill='x', pady=(3, 0))
+        second_row = tk.Frame(table_container, bg=self.colors['rover_dark'])
+        second_row.pack(fill='x', pady=(5, 0))
         
         # Create second row with equal distribution
         for i, sensor_name in enumerate(second_row_sensors):
-            sensor_col = tk.Frame(second_row, bg='#1a1a1a')
-            sensor_col.pack(side=tk.LEFT, fill='x', expand=True, padx=2)
+            sensor_col = tk.Frame(second_row, bg=self.colors['rover_dark'])
+            sensor_col.pack(side=tk.LEFT, fill='x', expand=True, padx=3)
             
-            # Sensor name label (top)
+            # Sensor name label
             name_label = tk.Label(sensor_col, text=sensor_name, 
                                  font=('Arial', 9, 'bold'), 
-                                 fg='white', bg='#333333',
-                                 relief='raised', bd=1, pady=2)
+                                 fg=self.colors['primary_text'], bg=self.colors['shadow_brown'],
+                                 relief='raised', bd=2, pady=3)
             name_label.pack(fill='x')
             
-            # State label (bottom)
-            state_label = tk.Label(sensor_col, text="OFF", 
+            # State label
+            state_label = tk.Label(sensor_col, text="OFFLINE", 
                                   font=('Arial', 10, 'bold'), 
-                                  fg='white', bg='#4a4a4a',
-                                  relief='raised', bd=1, pady=4)
+                                  fg=self.colors['secondary_text'], bg=self.colors['space_black'],
+                                  relief='sunken', bd=2, pady=4)
             state_label.pack(fill='x')
             
             self.sensor_labels[sensor_name] = state_label
         
-        # Add empty columns to balance the second row (since it has 4 items vs 5 in first row)
-        empty_col = tk.Frame(second_row, bg='#1a1a1a')
-        empty_col.pack(side=tk.LEFT, fill='x', expand=True, padx=2)
+        # Add empty column to balance the second row
+        empty_col = tk.Frame(second_row, bg=self.colors['rover_dark'])
+        empty_col.pack(side=tk.LEFT, fill='x', expand=True, padx=3)
         
-        # Control instructions
+        # Control instructions with Mars theme
         instructions = tk.Label(left_frame, 
-                              text="Controls: Click and drag the rover or use arrow keys to move. Click canvas first for keyboard control.",
-                              font=('Arial', 11), fg='white', bg='#1a1a1a')
-        instructions.pack()
+                              text="🎮 ROVER CONTROL: Drag rover or use arrow keys • Click canvas for keyboard control",
+                              font=('Arial', 11, 'bold'), fg=self.colors['mission_yellow'], 
+                              bg=self.colors['space_black'])
+        instructions.pack(pady=10)
         
-        # Right column for serial terminal
-        right_frame = tk.Frame(main_frame, bg='#2a2a2a', width=450, relief='raised', bd=2)
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(10, 0))
-        right_frame.pack_propagate(False)  # Maintain fixed width
+        # Right column for mission terminal with enhanced styling
+        right_frame = tk.Frame(main_frame, bg=self.colors['shadow_brown'], width=450, relief='raised', bd=3)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(15, 0))
+        right_frame.pack_propagate(False)
         
-        # Serial Terminal frame
-        terminal_frame = tk.LabelFrame(right_frame, text="Serial Terminal", 
+        # Mission Terminal frame
+        terminal_frame = tk.LabelFrame(right_frame, text="🖥️ MISSION CONTROL TERMINAL", 
                                      font=('Arial', 14, 'bold'), 
-                                     fg='white', bg='#2a2a2a',
-                                     labelanchor='n')
-        terminal_frame.pack(fill=tk.BOTH, expand=True, pady=10, padx=5)
+                                     fg=self.colors['primary_text'], bg=self.colors['shadow_brown'],
+                                     relief='raised', bd=3, labelanchor='n')
+        terminal_frame.pack(fill=tk.BOTH, expand=True, pady=12, padx=8)
         
-        # Terminal output area
+        # Terminal output area with Mars theme
         self.terminal_output = scrolledtext.ScrolledText(terminal_frame, 
                                                         height=28, width=45,
-                                                        bg='#000000', fg='#00ff00',
+                                                        bg=self.colors['space_black'], fg=self.colors['system_green'],
                                                         font=('Consolas', 9),
                                                         state=tk.DISABLED,
-                                                        wrap=tk.WORD)
-        self.terminal_output.pack(pady=5, padx=5, fill=tk.BOTH, expand=True)
+                                                        wrap=tk.WORD, relief='sunken', bd=2)
+        self.terminal_output.pack(pady=8, padx=8, fill=tk.BOTH, expand=True)
         
         # Terminal input frame
-        input_frame = tk.Frame(terminal_frame, bg='#2a2a2a')
-        input_frame.pack(fill=tk.X, pady=5, padx=5)
+        input_frame = tk.Frame(terminal_frame, bg=self.colors['shadow_brown'])
+        input_frame.pack(fill=tk.X, pady=8, padx=8)
         
-        # Command entry
-        tk.Label(input_frame, text="Command:", 
-                font=('Arial', 10), fg='white', bg='#2a2a2a').pack(side=tk.LEFT)
+        # Command entry with styling
+        tk.Label(input_frame, text="CMD:", 
+                font=('Arial', 10, 'bold'), fg=self.colors['primary_text'], bg=self.colors['shadow_brown']).pack(side=tk.LEFT)
         
         self.command_entry = tk.Entry(input_frame, font=('Consolas', 10),
-                                     bg='#1a1a1a', fg='white', insertbackground='white')
-        self.command_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 5))
+                                     bg=self.colors['rover_dark'], fg=self.colors['primary_text'], 
+                                     insertbackground=self.colors['mars_orange'], relief='sunken', bd=2)
+        self.command_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 8))
         self.command_entry.bind('<Return>', self.send_command)
         
-        # Send button
-        send_btn = tk.Button(input_frame, text="Send", 
+        # Send button with Mars styling
+        send_btn = tk.Button(input_frame, text="TRANSMIT", 
                            command=self.send_command,
-                           bg='#4CAF50', fg='white', font=('Arial', 9, 'bold'))
+                           bg=self.colors['mars_orange'], fg=self.colors['primary_text'], 
+                           font=('Arial', 9, 'bold'), relief='raised', bd=2)
         send_btn.pack(side=tk.RIGHT)
         
-        # Terminal control buttons
-        control_frame = tk.Frame(terminal_frame, bg='#2a2a2a')
-        control_frame.pack(fill=tk.X, pady=(0, 5), padx=5)
+        # Terminal control buttons with enhanced styling
+        control_frame = tk.Frame(terminal_frame, bg=self.colors['shadow_brown'])
+        control_frame.pack(fill=tk.X, pady=(0, 8), padx=8)
         
-        clear_btn = tk.Button(control_frame, text="Clear Terminal", 
+        clear_btn = tk.Button(control_frame, text="CLEAR LOG", 
                             command=self.clear_terminal,
-                            bg='#ff6b35', fg='white', font=('Arial', 9))
+                            bg=self.colors['alert_red'], fg=self.colors['primary_text'], 
+                            font=('Arial', 9, 'bold'), relief='raised', bd=2)
         clear_btn.pack(side=tk.LEFT)
         
         auto_scroll_var = tk.BooleanVar(value=True)
         self.auto_scroll_check = tk.Checkbutton(control_frame, text="Auto Scroll",
                                                variable=auto_scroll_var,
-                                               bg='#2a2a2a', fg='white',
-                                               selectcolor='#4a4a4a')
+                                               bg=self.colors['shadow_brown'], fg=self.colors['primary_text'],
+                                               selectcolor=self.colors['rover_dark'], font=('Arial', 9))
         self.auto_scroll_check.pack(side=tk.RIGHT)
         self.auto_scroll = auto_scroll_var
         
@@ -288,51 +332,49 @@ class AirlockGUI:
         self.canvas.bind("<B1-Motion>", self.on_canvas_drag)
         self.canvas.bind("<ButtonRelease-1>", self.on_canvas_release)
         self.canvas.bind("<KeyPress>", self.on_key_press)
-        # Also bind to root for global key events
         self.root.bind("<KeyPress>", self.on_key_press)
-        # Make sure canvas can receive focus
         self.canvas.bind("<Button-1>", self.on_canvas_focus, add='+')
         
-        # Add welcome message to terminal
-        self.add_terminal_message("=== Airlock HIL Simulator Terminal ===", "INFO")
-        self.add_terminal_message("Type commands below to send to Arduino", "INFO")
-        self.add_terminal_message("Commands are sent with < > delimiters automatically", "INFO")
+        # Add welcome message to terminal with ERC theme
+        self.add_terminal_message("=== ERC MARS MISSION CONTROL ACTIVATED ===", "INFO")
+        self.add_terminal_message("🚀 European Rover Challenge Airlock System Online", "INFO")
+        self.add_terminal_message("📡 Awaiting ground control commands...", "INFO")
         
         # Debug: Show initial gate states
         print(f"DEBUG: Initial gate states:")
         print(f"DEBUG: Gate A - Open: {self.gate_a_open}, Moving: {self.gate_a_moving}, Target: {self.gate_a_target_state}")
         print(f"DEBUG: Gate B - Open: {self.gate_b_open}, Moving: {self.gate_b_moving}, Target: {self.gate_b_target_state}")
         print(f"DEBUG: Gate requests: {self.gate_requests}")
-        
+    
     def add_terminal_message(self, message, msg_type="DATA"):
-        """Add a message to the terminal with timestamp and formatting"""
+        """Add a message to the terminal with timestamp and ERC styling"""
         timestamp = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
         
         self.terminal_output.config(state=tk.NORMAL)
         
-        # Color coding based on message type
+        # Enhanced color coding for ERC theme
         if msg_type == "SENT":
             color_tag = "sent"
-            prefix = ">> "
+            prefix = "🔼 TX: "
         elif msg_type == "RECEIVED":
             color_tag = "received"
-            prefix = "<< "
+            prefix = "🔽 RX: "
         elif msg_type == "INFO":
             color_tag = "info"
-            prefix = "-- "
+            prefix = "ℹ️  SYS: "
         elif msg_type == "ERROR":
             color_tag = "error"
-            prefix = "!! "
+            prefix = "⚠️  ERR: "
         else:
             color_tag = "default"
-            prefix = "   "
+            prefix = "📊 DAT: "
         
-        # Configure color tags
-        self.terminal_output.tag_configure("sent", foreground="#ffff00")
-        self.terminal_output.tag_configure("received", foreground="#00ff00")
-        self.terminal_output.tag_configure("info", foreground="#00aaff")
-        self.terminal_output.tag_configure("error", foreground="#ff0000")
-        self.terminal_output.tag_configure("default", foreground="#ffffff")
+        # Configure ERC theme color tags
+        self.terminal_output.tag_configure("sent", foreground=self.colors['mission_yellow'])
+        self.terminal_output.tag_configure("received", foreground=self.colors['system_green'])
+        self.terminal_output.tag_configure("info", foreground=self.colors['tech_blue'])
+        self.terminal_output.tag_configure("error", foreground=self.colors['alert_red'])
+        self.terminal_output.tag_configure("default", foreground=self.colors['mars_orange'])
         
         formatted_message = f"[{timestamp}] {prefix}{message}\n"
         self.terminal_output.insert(tk.END, formatted_message, color_tag)
@@ -374,122 +416,173 @@ class AirlockGUI:
         self.add_terminal_message("Terminal cleared", "INFO")
     
     def draw_airlock_static(self):
-        """Draw the static parts of the airlock that don't change"""
+        """Draw the static parts of the airlock with ERC Mars theme"""
         # Clear canvas
         self.canvas.delete("all")
         
-        # Draw background grid pattern for tech look
-        grid_size = 20
-        for x in range(0, 1000, grid_size):
-            self.canvas.create_line(x, 0, x, 250, fill='#333333', width=1, tags="static")
-        for y in range(0, 250, grid_size):
-            self.canvas.create_line(0, y, 1000, y, fill='#333333', width=1, tags="static")
+        # Draw Martian landscape background
+        canvas_width = 1000
+        canvas_height = 250
         
-        # Draw main airlock chamber with rounded corners and depth
-        chamber_y_offset = 10
-        chamber_height = self.airlock_height - 20
+        # Create layered Martian mountains in background
+        mountain_layers = [
+            # Far mountains (lighter, more distant)
+            {'points': [0, 180, 200, 160, 400, 170, 600, 150, 800, 165, 1000, 175, 1000, 250, 0, 250], 'color': '#B8724C'},
+            # Mid mountains
+            {'points': [0, 200, 150, 190, 350, 195, 550, 180, 750, 190, 950, 185, 1000, 190, 1000, 250, 0, 250], 'color': '#A8624C'},
+            # Near mountains (darker)
+            {'points': [0, 220, 100, 210, 300, 215, 500, 205, 700, 210, 900, 205, 1000, 210, 1000, 250, 0, 250], 'color': '#8B4A2C'}
+        ]
         
-        # Draw outer shell with metallic look
-        self.canvas.create_rectangle(self.start_x - 5, self.start_y - 5, 
-                                   self.start_x + self.airlock_width + 5, 
-                                   self.start_y + self.airlock_height + 5,
-                                   fill='#2a2a2a', outline='#666666', width=4, tags="static")
+        for layer in mountain_layers:
+            self.canvas.create_polygon(layer['points'], fill=layer['color'], outline="", tags="static")
         
-        # Front zone with enhanced details
+        # Add distant atmospheric haze effect
+        for i in range(5):
+            alpha_val = 30 - i * 5
+            haze_color = f"#{alpha_val:02x}{alpha_val//2:02x}00"
+            y_pos = 50 + i * 30
+            self.canvas.create_rectangle(0, y_pos, canvas_width, y_pos + 20, 
+                                       fill=haze_color, outline="", stipple='gray25', tags="static")
+        
+        # Draw Martian surface with rocky texture
+        surface_y = 220
+        # Base surface
+        self.canvas.create_rectangle(0, surface_y, canvas_width, canvas_height, 
+                                   fill=self.colors['shadow_brown'], outline="", tags="static")
+        
+        # Add rocky surface details
+        for i in range(30):
+            rock_x = random.randint(0, canvas_width)
+            rock_y = random.randint(surface_y, canvas_height - 10)
+            rock_size = random.randint(2, 6)
+            rock_shade = random.choice([self.colors['rover_dark'], '#4A3426', '#5A3426'])
+            self.canvas.create_oval(rock_x, rock_y, rock_x + rock_size, rock_y + rock_size,
+                                  fill=rock_shade, outline="", tags="static")
+        
+        # Draw main airlock structure with enhanced Mars base design
+        chamber_y_offset = 15
+        chamber_height = self.airlock_height - 30
+        
+        # Airlock foundation platform
+        platform_y = self.start_y + self.airlock_height
+        self.canvas.create_rectangle(self.start_x - 10, platform_y, 
+                                   self.start_x + self.airlock_width + 10, platform_y + 15,
+                                   fill=self.colors['rover_dark'], outline=self.colors['mars_orange'], width=2, tags="static")
+        
+        # Main airlock structure with reinforced Mars base look
+        self.canvas.create_rectangle(self.start_x - 8, self.start_y - 8, 
+                                   self.start_x + self.airlock_width + 8, 
+                                   self.start_y + self.airlock_height + 8,
+                                   fill=self.colors['rover_dark'], outline=self.colors['mars_orange'], width=4, tags="static")
+        
+        # Front zone (Mars Environment) - Red theme for Martian surface
         front_x = self.start_x
         front_w = self.front_zone_width
         
-        # Main chamber
         self.canvas.create_rectangle(front_x, self.start_y + chamber_y_offset, 
                                    front_x + front_w, 
                                    self.start_y + chamber_height,
-                                   fill='#1a4a5c', outline='#4a9eff', width=3, tags="static")
+                                   fill='#3a1a1a', outline=self.colors['alert_red'], width=3, tags="static")
         
-        # Add rivets and detail lines
-        for i in range(3):
-            y_pos = self.start_y + 30 + i * 40
-            self.canvas.create_oval(front_x + 10, y_pos, front_x + 15, y_pos + 5,
-                                  fill='#666666', outline='#888888', tags="static")
-            self.canvas.create_oval(front_x + front_w - 15, y_pos, front_x + front_w - 10, y_pos + 5,
-                                  fill='#666666', outline='#888888', tags="static")
+        # Mars environment details for front chamber
+        for i in range(4):
+            y_pos = self.start_y + 35 + i * 30
+            # Left side environmental sensors
+            self.canvas.create_oval(front_x + 8, y_pos, front_x + 18, y_pos + 10,
+                                  fill=self.colors['alert_red'], outline=self.colors['primary_text'], tags="static")
+            # Right side environmental sensors
+            self.canvas.create_oval(front_x + front_w - 18, y_pos, front_x + front_w - 8, y_pos + 10,
+                                  fill=self.colors['alert_red'], outline=self.colors['primary_text'], tags="static")
         
-        # Horizontal detail lines
-        for i in range(2):
-            y_pos = self.start_y + 50 + i * 60
-            self.canvas.create_line(front_x + 20, y_pos, front_x + front_w - 20, y_pos,
-                                  fill='#4a9eff', width=2, tags="static")
-        
+        # Chamber identification
         self.canvas.create_text(front_x + front_w/2, self.start_y + 25,
-                              text="FRONT CHAMBER", fill='#4a9eff', 
-                              font=('Arial', 12, 'bold'), tags="static")
+                              text="MARS SURFACE", fill=self.colors['alert_red'], 
+                              font=('Arial', 14, 'bold'), tags="static")
         self.canvas.create_text(front_x + front_w/2, self.start_y + 40,
-                              text="ENTRY ZONE", fill='#ffffff', 
-                              font=('Arial', 9), tags="static")
+                              text="Martian Environment", fill=self.colors['secondary_text'], 
+                              font=('Arial', 10), tags="static")
         
-        # Middle zone (pressurization chamber)
+        # Middle zone (Transition Chamber) - Orange theme for Mars adaptation
         middle_x = self.start_x + self.front_zone_width
         middle_w = self.middle_zone_width
         
         self.canvas.create_rectangle(middle_x, self.start_y + chamber_y_offset,
                                    middle_x + middle_w,
                                    self.start_y + chamber_height,
-                                   fill='#4a2a1a', outline='#ff9a4a', width=3, tags="static")
+                                   fill='#4a2a1a', outline=self.colors['mars_orange'], width=3, tags="static")
         
-        # Pressure indicator rings
-        for i in range(4):
-            ring_y = self.start_y + 40 + i * 25
-            self.canvas.create_oval(middle_x + middle_w/2 - 15, ring_y,
-                                  middle_x + middle_w/2 + 15, ring_y + 8,
-                                  fill='', outline='#ff9a4a', width=2, tags="static")
-        
-        # Pressure lines
+        # Transition zone details - pressure adaptation systems
         for i in range(6):
-            x_pos = middle_x + 30 + i * 80
-            self.canvas.create_line(x_pos, self.start_y + 20, x_pos, self.start_y + chamber_height - 10,
-                                  fill='#ff6a2a', width=1, dash=(5, 5), tags="static")
+            ring_x = middle_x + 30 + i * 80
+            ring_y = self.start_y + chamber_height//2
+            # Pressure rings
+            for j in range(3):
+                radius = 8 + j * 4
+                self.canvas.create_oval(ring_x - radius, ring_y - radius//2,
+                                      ring_x + radius, ring_y + radius//2,
+                                      fill='', outline=self.colors['mars_orange'], width=1, tags="static")
+        
+        # Atmospheric processing indicators
+        for i in range(4):
+            x_pos = middle_x + 40 + i * 120
+            self.canvas.create_line(x_pos, self.start_y + 25, x_pos, self.start_y + chamber_height - 15,
+                                  fill=self.colors['mission_yellow'], width=2, dash=(8, 4), tags="static")
         
         self.canvas.create_text(middle_x + middle_w/2, self.start_y + 25,
-                              text="TRANSITION CHAMBER", fill='#ff9a4a', 
-                              font=('Arial', 12, 'bold'), tags="static")
+                              text="TRANSITION CHAMBER", fill=self.colors['mars_orange'], 
+                              font=('Arial', 14, 'bold'), tags="static")
         self.canvas.create_text(middle_x + middle_w/2, self.start_y + 40,
-                              text="PRESSURIZATION ZONE", fill='#ffffff', 
-                              font=('Arial', 9), tags="static")
+                              text="Atmosphere Processing", fill=self.colors['secondary_text'], 
+                              font=('Arial', 10), tags="static")
         
-        # Back zone
+        # Back zone (Earth Habitat) - Blue theme for pressurized habitat
         back_x = self.start_x + self.front_zone_width + self.middle_zone_width
         back_w = self.back_zone_width
         
         self.canvas.create_rectangle(back_x, self.start_y + chamber_y_offset,
                                    back_x + back_w,
                                    self.start_y + chamber_height,
-                                   fill='#1a5c1a', outline='#4aff4a', width=3, tags="static")
+                                   fill='#1a3a5c', outline=self.colors['tech_blue'], width=3, tags="static")
         
-        # Add exit indicators
+        # Habitat environment indicators
         for i in range(3):
-            y_pos = self.start_y + 30 + i * 40
-            self.canvas.create_oval(back_x + 10, y_pos, back_x + 15, y_pos + 5,
-                                  fill='#666666', outline='#888888', tags="static")
-            self.canvas.create_oval(back_x + back_w - 15, y_pos, back_x + back_w - 10, y_pos + 5,
-                                  fill='#666666', outline='#888888', tags="static")
+            y_pos = self.start_y + 35 + i * 35
+            # Life support systems
+            self.canvas.create_rectangle(back_x + 15, y_pos, back_x + 25, y_pos + 20,
+                                       fill=self.colors['tech_blue'], outline=self.colors['primary_text'], tags="static")
+            self.canvas.create_rectangle(back_x + back_w - 25, y_pos, back_x + back_w - 15, y_pos + 20,
+                                       fill=self.colors['tech_blue'], outline=self.colors['primary_text'], tags="static")
         
-        # Exit arrows
+        # Habitat entry indicators
         for i in range(2):
-            arrow_x = back_x + 40 + i * 60
-            self.canvas.create_polygon(arrow_x, self.start_y + 70,
-                                     arrow_x + 15, self.start_y + 60,
-                                     arrow_x + 15, self.start_y + 65,
-                                     arrow_x + 25, self.start_y + 65,
-                                     arrow_x + 25, self.start_y + 75,
+            arrow_x = back_x + 50 + i * 80
+            # Habitat entry arrows
+            self.canvas.create_polygon(arrow_x, self.start_y + 80,
+                                     arrow_x + 20, self.start_y + 70,
                                      arrow_x + 15, self.start_y + 75,
-                                     arrow_x + 15, self.start_y + 80,
-                                     fill='#4aff4a', outline='#ffffff', tags="static")
+                                     arrow_x + 30, self.start_y + 75,
+                                     arrow_x + 30, self.start_y + 85,
+                                     arrow_x + 15, self.start_y + 85,
+                                     arrow_x + 20, self.start_y + 90,
+                                     fill=self.colors['tech_blue'], outline=self.colors['primary_text'], tags="static")
         
         self.canvas.create_text(back_x + back_w/2, self.start_y + 25,
-                              text="EXIT CHAMBER", fill='#4aff4a', 
-                              font=('Arial', 12, 'bold'), tags="static")
+                              text="HABITAT ENTRY", fill=self.colors['tech_blue'], 
+                              font=('Arial', 14, 'bold'), tags="static")
         self.canvas.create_text(back_x + back_w/2, self.start_y + 40,
-                              text="DECONTAMINATION ZONE", fill='#ffffff', 
-                              font=('Arial', 9), tags="static")
+                              text="Earth-like Environment", fill=self.colors['secondary_text'], 
+                              font=('Arial', 10), tags="static")
+        
+        # Add ERC mission patch/logo area
+        logo_x = 20
+        logo_y = 20
+        self.canvas.create_oval(logo_x, logo_y, logo_x + 60, logo_y + 60,
+                              fill=self.colors['rover_dark'], outline=self.colors['mars_orange'], width=3, tags="static")
+        self.canvas.create_text(logo_x + 30, logo_y + 20, text="ERC", 
+                              font=('Arial', 12, 'bold'), fill=self.colors['mars_orange'], tags="static")
+        self.canvas.create_text(logo_x + 30, logo_y + 40, text="2024", 
+                              font=('Arial', 10), fill=self.colors['secondary_text'], tags="static")
     
     def update_display(self):
         """Update only the dynamic parts of the display - now throttled"""
@@ -505,56 +598,111 @@ class AirlockGUI:
         middle_sensor_x = self.start_x + self.front_zone_width + self.middle_zone_width / 2
         back_sensor_x = self.start_x + self.front_zone_width + self.middle_zone_width + self.back_zone_width / 2
         
-        # Draw presence sensor lines
+        # HIGH CONTRAST sensor lines - much more visible when triggered
         # Front presence sensor line
+        if self.sensor_states['PRESENCE_FRONT']:
+            # ACTIVE - bright pulsing green with thick line
+            pulse = abs(math.sin(time.time() * 6)) * 0.4 + 0.6
+            line_color = f"#00{int(255*pulse):02x}00"
+            text_color = f"#00{int(255*pulse):02x}00"
+            line_width = 8
+        else:
+            # INACTIVE - very dim and thin
+            line_color = '#1a1a1a'
+            text_color = '#333333'
+            line_width = 2
+            
         self.canvas.create_line(front_sensor_x, self.start_y + 20,
                               front_sensor_x, self.start_y + self.airlock_height - 20,
-                              fill='#00ff00' if self.sensor_states['PRESENCE_FRONT'] else '#005500',
-                              width=5, dash=(8, 4), tags="sensor_zones")
-        self.canvas.create_text(front_sensor_x - 20, self.start_y + 10,
-                              text="FRONT", fill='#00ff00' if self.sensor_states['PRESENCE_FRONT'] else '#005500',
-                              font=('Arial', 9, 'bold'), tags="sensor_zones")
+                              fill=line_color, width=line_width, dash=(8, 4), tags="sensor_zones")
+        self.canvas.create_text(front_sensor_x - 25, self.start_y + 10,
+                              text="FRONT", fill=text_color,
+                              font=('Arial', 10, 'bold'), tags="sensor_zones")
         
         # Middle presence sensor line
+        if self.sensor_states['PRESENCE_MIDDLE']:
+            # ACTIVE - bright pulsing green
+            pulse = abs(math.sin(time.time() * 6)) * 0.4 + 0.6
+            line_color = f"#00{int(255*pulse):02x}00"
+            text_color = f"#00{int(255*pulse):02x}00"
+            line_width = 8
+        else:
+            # INACTIVE - very dim
+            line_color = '#1a1a1a'
+            text_color = '#333333'
+            line_width = 2
+            
         self.canvas.create_line(middle_sensor_x, self.start_y + 20,
                               middle_sensor_x, self.start_y + self.airlock_height - 20,
-                              fill='#00ff00' if self.sensor_states['PRESENCE_MIDDLE'] else '#005500',
-                              width=5, dash=(8, 4), tags="sensor_zones")
-        self.canvas.create_text(middle_sensor_x - 20, self.start_y + 10,
-                              text="MIDDLE", fill='#00ff00' if self.sensor_states['PRESENCE_MIDDLE'] else '#005500',
-                              font=('Arial', 9, 'bold'), tags="sensor_zones")
+                              fill=line_color, width=line_width, dash=(8, 4), tags="sensor_zones")
+        self.canvas.create_text(middle_sensor_x - 25, self.start_y + 10,
+                              text="MIDDLE", fill=text_color,
+                              font=('Arial', 10, 'bold'), tags="sensor_zones")
         
         # Back presence sensor line
+        if self.sensor_states['PRESENCE_BACK']:
+            # ACTIVE - bright pulsing green
+            pulse = abs(math.sin(time.time() * 6)) * 0.4 + 0.6
+            line_color = f"#00{int(255*pulse):02x}00"
+            text_color = f"#00{int(255*pulse):02x}00"
+            line_width = 8
+        else:
+            # INACTIVE - very dim
+            line_color = '#1a1a1a'
+            text_color = '#333333'
+            line_width = 2
+            
         self.canvas.create_line(back_sensor_x, self.start_y + 20,
                               back_sensor_x, self.start_y + self.airlock_height - 20,
-                              fill='#00ff00' if self.sensor_states['PRESENCE_BACK'] else '#005500',
-                              width=5, dash=(8, 4), tags="sensor_zones")
-        self.canvas.create_text(back_sensor_x - 20, self.start_y + 10,
-                              text="BACK", fill='#00ff00' if self.sensor_states['PRESENCE_BACK'] else '#005500',
-                              font=('Arial', 9, 'bold'), tags="sensor_zones")
+                              fill=line_color, width=line_width, dash=(8, 4), tags="sensor_zones")
+        self.canvas.create_text(back_sensor_x - 25, self.start_y + 10,
+                              text="BACK", fill=text_color,
+                              font=('Arial', 10, 'bold'), tags="sensor_zones")
         
-        # Gate safety zones (keep these as areas)
+        # HIGH CONTRAST Gate safety zones 
         safety_zone_width = 60
         
         # Gate A safety zone
+        if self.sensor_states['GATE_SAFETY_A']:
+            # ACTIVE - bright pulsing red
+            pulse = abs(math.sin(time.time() * 8)) * 0.3 + 0.7
+            zone_color = f"#{int(255*pulse):02x}0000"
+            text_color = f"#{int(255*pulse):02x}0000"
+            zone_width = 5
+        else:
+            # INACTIVE - very dim
+            zone_color = '#2a1a1a'
+            text_color = '#444444'
+            zone_width = 2
+            
         self.canvas.create_rectangle(self.start_x + self.gate_a_x - safety_zone_width/2, self.start_y,
                                    self.start_x + self.gate_a_x + safety_zone_width/2,
                                    self.start_y + self.airlock_height,
-                                   fill='', outline='#ff0000' if self.sensor_states['GATE_SAFETY_A'] else '#550000',
-                                   width=3, dash=(3, 3), tags="sensor_zones")
+                                   fill='', outline=zone_color, width=zone_width, dash=(3, 3), tags="sensor_zones")
         self.canvas.create_text(self.start_x + self.gate_a_x, self.start_y + self.airlock_height + 20,
-                              text="Gate A Safety", fill='#ff0000' if self.sensor_states['GATE_SAFETY_A'] else '#550000',
-                              font=('Arial', 10), tags="sensor_zones")
+                              text="Gate A Safety", fill=text_color,
+                              font=('Arial', 10, 'bold'), tags="sensor_zones")
         
         # Gate B safety zone
+        if self.sensor_states['GATE_SAFETY_B']:
+            # ACTIVE - bright pulsing red
+            pulse = abs(math.sin(time.time() * 8)) * 0.3 + 0.7
+            zone_color = f"#{int(255*pulse):02x}0000"
+            text_color = f"#{int(255*pulse):02x}0000"
+            zone_width = 5
+        else:
+            # INACTIVE - very dim
+            zone_color = '#2a1a1a'
+            text_color = '#444444'
+            zone_width = 2
+            
         self.canvas.create_rectangle(self.start_x + self.gate_b_x - safety_zone_width/2, self.start_y,
                                    self.start_x + self.gate_b_x + safety_zone_width/2,
                                    self.start_y + self.airlock_height,
-                                   fill='', outline='#ff0000' if self.sensor_states['GATE_SAFETY_B'] else '#550000',
-                                   width=3, dash=(3, 3), tags="sensor_zones")
+                                   fill='', outline=zone_color, width=zone_width, dash=(3, 3), tags="sensor_zones")
         self.canvas.create_text(self.start_x + self.gate_b_x, self.start_y + self.airlock_height + 20,
-                              text="Gate B Safety", fill='#ff0000' if self.sensor_states['GATE_SAFETY_B'] else '#550000',
-                              font=('Arial', 10), tags="sensor_zones")
+                              text="Gate B Safety", fill=text_color,
+                              font=('Arial', 10, 'bold'), tags="sensor_zones")
     
     def check_collision(self, new_x):
         # No collision detection - allow free movement for testing
@@ -590,7 +738,7 @@ class AirlockGUI:
         self.rover_dragging = False
     
     def on_key_press(self, event):
-        step = 15
+        step = 1  # Reduced from 15 to 5 pixels for more precise control
         new_x = self.rover_x
         
         if event.keysym == 'Left':
@@ -622,32 +770,32 @@ class AirlockGUI:
     def connect_serial(self):
         port = self.port_var.get()
         if not port:
-            messagebox.showerror("Error", "Please select a COM port")
+            messagebox.showerror("Mission Control Error", "Please select a communication port")
             return
         
         try:
             self.ser = serial.Serial(port, 115200, timeout=1)
             time.sleep(2)  # Wait for Arduino to initialize
             self.connected = True
-            self.connect_btn.config(text="Disconnect", bg='#f44336')
-            self.status_label.config(text=f"Connected to {port}", fg='green')
-            self.add_terminal_message(f"Connected to {port} at 115200 baud", "INFO")
-            messagebox.showinfo("Success", f"Connected to {port}")
+            self.connect_btn.config(text="TERMINATE LINK", bg=self.colors['alert_red'])
+            self.status_label.config(text=f"🛰️ MISSION CONTROL LINK ACTIVE - {port}", fg=self.colors['system_green'])
+            self.add_terminal_message(f"🚀 Mission Control Link Established on {port} at 115200 baud", "INFO")
+            messagebox.showinfo("ERC Mission Control", f"Communication link established with {port}")
             # Send initial sensor states
             self.send_data()
         except serial.SerialException as e:
-            error_msg = f"Failed to connect: {str(e)}"
+            error_msg = f"Failed to establish communication link: {str(e)}"
             self.add_terminal_message(error_msg, "ERROR")
-            messagebox.showerror("Error", error_msg)
+            messagebox.showerror("Mission Control Error", error_msg)
     
     def disconnect_serial(self):
         if self.ser:
             self.ser.close()
             self.ser = None
         self.connected = False
-        self.connect_btn.config(text="Connect", bg='#4CAF50')
-        self.status_label.config(text="Disconnected", fg='red')
-        self.add_terminal_message("Serial connection closed", "INFO")
+        self.connect_btn.config(text="ESTABLISH LINK", bg=self.colors['system_green'])
+        self.status_label.config(text="◯ COMMUNICATION OFFLINE", fg=self.colors['alert_red'])
+        self.add_terminal_message("🔌 Mission Control Link Terminated", "INFO")
     
     def send_data(self):
         if not self.connected or not self.ser:
@@ -1020,18 +1168,27 @@ class AirlockGUI:
             return 1 - pow(-2 * t + 2, 3) / 2
     
     def create_gate_particles(self, gate_x, gate_type):
-        """Create particle effects for gate movement"""
+        """Create enhanced particle effects for gate movement with ERC Mars theme"""
         particles = []
-        particle_count = 1  # Minimal particles - only 1 per creation
+        particle_count = 1  # Minimal particles for better performance
         
         for _ in range(particle_count):
+            # Enhanced particle colors for Mars theme
+            if gate_type in ['opening', 'opened']:
+                color_base = self.colors['system_green']
+            elif gate_type in ['closing']:
+                color_base = self.colors['mars_orange']
+            else:
+                color_base = self.colors['mission_yellow']
+            
             particle = {
-                'x': self.start_x + gate_x + random.uniform(-3, 3),  # Very small spread
+                'x': self.start_x + gate_x + random.uniform(-5, 5),
                 'y': self.start_y + random.uniform(60, self.airlock_height - 60),
-                'vx': random.uniform(-0.3, 0.3),  # Very slow movement
-                'vy': random.uniform(-0.8, -0.2),  # Very slow movement
+                'vx': random.uniform(-0.5, 0.5),
+                'vy': random.uniform(-1.0, -0.3),
                 'life': 1.0,
-                'size': random.uniform(1, 1.5)  # Very small particles
+                'size': random.uniform(1.5, 2.5),
+                'color': color_base
             }
             particles.append(particle)
         return particles
@@ -1051,25 +1208,32 @@ class AirlockGUI:
         return alive_particles
     
     def draw_particles(self, particles):
-        """Draw particle effects"""
+        """Draw enhanced particle effects for ERC theme"""
         for particle in particles:
-            alpha = max(0, min(255, int(particle['life'] * 255)))  # Clamp alpha value
-            if alpha > 100:  # Only draw clearly visible particles
-                # Create a simple glowing effect
-                alpha_hex = f"{alpha:02x}"
-                color = f"#{alpha_hex}{alpha_hex}00"  # Yellow particles
-                size = max(1.0, particle['size'])  # Minimum size
+            alpha = max(0, min(255, int(particle['life'] * 255)))
+            if alpha > 120:  # Only draw clearly visible particles
+                size = max(1.0, particle['size'])
                 
-                # Simple particle drawing
+                # Enhanced particle rendering with glow effect
                 x1 = particle['x'] - size
                 y1 = particle['y'] - size 
                 x2 = particle['x'] + size
                 y2 = particle['y'] + size
                 
+                # Main particle
                 self.canvas.create_oval(
                     x1, y1, x2, y2,
-                    fill=color, outline="", tags="particles"
+                    fill=particle['color'], outline="", tags="particles"
                 )
+                
+                # Subtle glow effect for Mars atmosphere
+                if size > 1.5:
+                    glow_size = size * 1.3
+                    self.canvas.create_oval(
+                        particle['x'] - glow_size, particle['y'] - glow_size,
+                        particle['x'] + glow_size, particle['y'] + glow_size,
+                        fill="", outline=particle['color'], width=1, tags="particles"
+                    )
 
     def request_update(self, force=False):
         """Throttled update system to prevent flickering"""
@@ -1101,16 +1265,16 @@ class AirlockGUI:
         self.draw_rover()
 
     def draw_gates(self):
-        # Update and draw particles (but don't delete all particles every frame)
+        # Update and draw particles
         self.gate_a_particles = self.update_particles(self.gate_a_particles)
         self.gate_b_particles = self.update_particles(self.gate_b_particles)
         
-        # Only draw particles if there are particles to show
+        # Draw particles with enhanced ERC theme
         if self.gate_a_particles or self.gate_b_particles:
             self.draw_particles(self.gate_a_particles)
             self.draw_particles(self.gate_b_particles)
         
-        # Gate A with enhanced realistic design
+        # Enhanced Gate A with ERC Mars theme
         if self.gate_a_moving:
             eased_progress = self.ease_in_out_cubic(self.gate_animation_progress_a)
         else:
@@ -1121,17 +1285,20 @@ class AirlockGUI:
         gate_a_height = self.airlock_height * (1 - eased_progress)
         
         if gate_a_height < 5:
-            gate_a_height = 5  # Minimum visible height
+            gate_a_height = 5
         
-        # Enhanced gate colors and effects
+        # Enhanced gate colors with ERC theme
         if self.gate_a_moving:
             pulse = abs(math.sin(time.time() * 4)) * 0.3 + 0.7
-            gate_a_color = f"#{int(255*pulse):02x}{int(200*pulse):02x}00"
+            # Use mission colors for moving gates
+            red_val = int(255 * pulse) if self.gate_a_target_state else int(200 * pulse)
+            green_val = int(200 * pulse) if self.gate_a_target_state else int(100 * pulse)
+            gate_a_color = f"#{red_val:02x}{green_val:02x}00"
             
-            # Add motion blur effect
+            # Enhanced motion blur effect
             for offset in range(3):
-                blur_alpha = int(60 - offset * 20)
-                blur_color = f"#{blur_alpha:02x}{blur_alpha:02x}00"
+                blur_alpha = int(80 - offset * 25)
+                blur_color = f"#{blur_alpha:02x}{blur_alpha//2:02x}00"
                 self.canvas.create_rectangle(
                     self.start_x + self.gate_a_x - self.gate_width/2 - offset, gate_a_y - offset,
                     self.start_x + self.gate_a_x + self.gate_width/2 + offset,
@@ -1139,60 +1306,61 @@ class AirlockGUI:
                     fill=blur_color, outline="", tags="gates"
                 )
         else:
-            gate_a_color = '#00cc00' if self.gate_a_open else '#cc0000'
+            gate_a_color = self.colors['system_green'] if self.gate_a_open else self.colors['alert_red']
         
-        # Main gate body with metallic look
+        # Main gate body with enhanced Mars tech look
         gate_x_left = self.start_x + self.gate_a_x - self.gate_width/2
         gate_x_right = self.start_x + self.gate_a_x + self.gate_width/2
         
-        # Draw gate segments for realistic look
+        # Main gate structure
         self.canvas.create_rectangle(
             gate_x_left, gate_a_y,
             gate_x_right, gate_a_y + gate_a_height,
-            fill=gate_a_color, outline='#ffffff', width=2, tags="gates"
+            fill=gate_a_color, outline=self.colors['primary_text'], width=3, tags="gates"
         )
         
-        # Add realistic gate details
+        # Enhanced gate details for Mars base aesthetics
         if gate_a_height > 30:
-            # Horizontal segments
+            # Horizontal segments with ERC styling
             segment_count = max(2, int(gate_a_height / 25))
             for i in range(1, segment_count):
                 y = gate_a_y + (gate_a_height / segment_count) * i
-                self.canvas.create_line(gate_x_left + 1, y, gate_x_right - 1, y,
-                                      fill='#333333', width=2, tags="gates")
+                self.canvas.create_line(gate_x_left + 2, y, gate_x_right - 2, y,
+                                      fill=self.colors['rover_dark'], width=2, tags="gates")
             
-            # Side rails
-            self.canvas.create_rectangle(gate_x_left - 3, gate_a_y - 5,
-                                       gate_x_left, gate_a_y + gate_a_height + 5,
-                                       fill='#444444', outline='#666666', tags="gates")
-            self.canvas.create_rectangle(gate_x_right, gate_a_y - 5,
-                                       gate_x_right + 3, gate_a_y + gate_a_height + 5,
-                                       fill='#444444', outline='#666666', tags="gates")
+            # Enhanced side rails with Mars tech look
+            self.canvas.create_rectangle(gate_x_left - 4, gate_a_y - 8,
+                                       gate_x_left, gate_a_y + gate_a_height + 8,
+                                       fill=self.colors['rover_dark'], outline=self.colors['mars_orange'], width=2, tags="gates")
+            self.canvas.create_rectangle(gate_x_right, gate_a_y - 8,
+                                       gate_x_right + 4, gate_a_y + gate_a_height + 8,
+                                       fill=self.colors['rover_dark'], outline=self.colors['mars_orange'], width=2, tags="gates")
         
-        # Gate status with enhanced styling
+        # Enhanced gate status with ERC mission styling
         status_text = "OPENING" if (self.gate_a_moving and self.gate_a_target_state) else \
                      "CLOSING" if (self.gate_a_moving and not self.gate_a_target_state) else \
                      "OPEN" if self.gate_a_open else "SEALED"
         
-        status_color = '#ffff00' if self.gate_a_moving else ('#00ff00' if self.gate_a_open else '#ff0000')
+        status_color = self.colors['mission_yellow'] if self.gate_a_moving else \
+                      (self.colors['system_green'] if self.gate_a_open else self.colors['alert_red'])
         
-        # Gate label background
+        # Enhanced gate label background
         self.canvas.create_rectangle(
-            self.start_x + self.gate_a_x - 35, self.start_y - 35,
-            self.start_x + self.gate_a_x + 35, self.start_y - 5,
-            fill='#1a1a1a', outline='#666666', width=1, tags="gates"
+            self.start_x + self.gate_a_x - 40, self.start_y - 40,
+            self.start_x + self.gate_a_x + 40, self.start_y - 5,
+            fill=self.colors['rover_dark'], outline=self.colors['mars_orange'], width=2, tags="gates"
         )
         
         self.canvas.create_text(
-            self.start_x + self.gate_a_x, self.start_y - 25,
-            text="GATE A", fill='#4a9eff', font=('Arial', 11, 'bold'), tags="gates"
+            self.start_x + self.gate_a_x, self.start_y - 28,
+            text="GATE A", fill=self.colors['tech_blue'], font=('Arial', 11, 'bold'), tags="gates"
         )
         self.canvas.create_text(
-            self.start_x + self.gate_a_x, self.start_y - 12,
-            text=status_text, fill=status_color, font=('Arial', 8, 'bold'), tags="gates"
+            self.start_x + self.gate_a_x, self.start_y - 15,
+            text=status_text, fill=status_color, font=('Arial', 9, 'bold'), tags="gates"
         )
         
-        # Gate B with same enhanced design
+        # Enhanced Gate B with same styling
         if self.gate_b_moving:
             eased_progress = self.ease_in_out_cubic(self.gate_animation_progress_b)
         else:
@@ -1206,11 +1374,13 @@ class AirlockGUI:
         
         if self.gate_b_moving:
             pulse = abs(math.sin(time.time() * 4)) * 0.3 + 0.7
-            gate_b_color = f"#{int(255*pulse):02x}{int(200*pulse):02x}00"
+            red_val = int(255 * pulse) if self.gate_b_target_state else int(200 * pulse)
+            green_val = int(200 * pulse) if self.gate_b_target_state else int(100 * pulse)
+            gate_b_color = f"#{red_val:02x}{green_val:02x}00"
             
             for offset in range(3):
-                blur_alpha = int(60 - offset * 20)
-                blur_color = f"#{blur_alpha:02x}{blur_alpha:02x}00"
+                blur_alpha = int(80 - offset * 25)
+                blur_color = f"#{blur_alpha:02x}{blur_alpha//2:02x}00"
                 self.canvas.create_rectangle(
                     self.start_x + self.gate_b_x - self.gate_width/2 - offset, gate_b_y - offset,
                     self.start_x + self.gate_b_x + self.gate_width/2 + offset,
@@ -1218,7 +1388,7 @@ class AirlockGUI:
                     fill=blur_color, outline="", tags="gates"
                 )
         else:
-            gate_b_color = '#00cc00' if self.gate_b_open else '#cc0000'
+            gate_b_color = self.colors['system_green'] if self.gate_b_open else self.colors['alert_red']
         
         gate_x_left = self.start_x + self.gate_b_x - self.gate_width/2
         gate_x_right = self.start_x + self.gate_b_x + self.gate_width/2
@@ -1226,174 +1396,217 @@ class AirlockGUI:
         self.canvas.create_rectangle(
             gate_x_left, gate_b_y,
             gate_x_right, gate_b_y + gate_b_height,
-            fill=gate_b_color, outline='#ffffff', width=2, tags="gates"
+            fill=gate_b_color, outline=self.colors['primary_text'], width=3, tags="gates"
         )
         
         if gate_b_height > 30:
             segment_count = max(2, int(gate_b_height / 25))
             for i in range(1, segment_count):
                 y = gate_b_y + (gate_b_height / segment_count) * i
-                self.canvas.create_line(gate_x_left + 1, y, gate_x_right - 1, y,
-                                      fill='#333333', width=2, tags="gates")
+                self.canvas.create_line(gate_x_left + 2, y, gate_x_right - 2, y,
+                                      fill=self.colors['rover_dark'], width=2, tags="gates")
             
-            self.canvas.create_rectangle(gate_x_left - 3, gate_b_y - 5,
-                                       gate_x_left, gate_b_y + gate_b_height + 5,
-                                       fill='#444444', outline='#666666', tags="gates")
-            self.canvas.create_rectangle(gate_x_right, gate_b_y - 5,
-                                       gate_x_right + 3, gate_b_y + gate_b_height + 5,
-                                       fill='#444444', outline='#666666', tags="gates")
+            self.canvas.create_rectangle(gate_x_left - 4, gate_b_y - 8,
+                                       gate_x_left, gate_b_y + gate_b_height + 8,
+                                       fill=self.colors['rover_dark'], outline=self.colors['mars_orange'], width=2, tags="gates")
+            self.canvas.create_rectangle(gate_x_right, gate_b_y - 8,
+                                       gate_x_right + 4, gate_b_y + gate_b_height + 8,
+                                       fill=self.colors['rover_dark'], outline=self.colors['mars_orange'], width=2, tags="gates")
         
         status_text = "OPENING" if (self.gate_b_moving and self.gate_b_target_state) else \
                      "CLOSING" if (self.gate_b_moving and not self.gate_b_target_state) else \
                      "OPEN" if self.gate_b_open else "SEALED"
         
-        status_color = '#ffff00' if self.gate_b_moving else ('#00ff00' if self.gate_b_open else '#ff0000')
+        status_color = self.colors['mission_yellow'] if self.gate_b_moving else \
+                      (self.colors['system_green'] if self.gate_b_open else self.colors['alert_red'])
         
         self.canvas.create_rectangle(
-            self.start_x + self.gate_b_x - 35, self.start_y - 35,
-            self.start_x + self.gate_b_x + 35, self.start_y - 5,
-            fill='#1a1a1a', outline='#666666', width=1, tags="gates"
+            self.start_x + self.gate_b_x - 40, self.start_y - 40,
+            self.start_x + self.gate_b_x + 40, self.start_y - 5,
+            fill=self.colors['rover_dark'], outline=self.colors['mars_orange'], width=2, tags="gates"
         )
         
         self.canvas.create_text(
-            self.start_x + self.gate_b_x, self.start_y - 25,
-            text="GATE B", fill='#ff9a4a', font=('Arial', 11, 'bold'), tags="gates"
+            self.start_x + self.gate_b_x, self.start_y - 28,
+            text="GATE B", fill=self.colors['mars_orange'], font=('Arial', 11, 'bold'), tags="gates"
         )
         self.canvas.create_text(
-            self.start_x + self.gate_b_x, self.start_y - 12,
-            text=status_text, fill=status_color, font=('Arial', 8, 'bold'), tags="gates"
+            self.start_x + self.gate_b_x, self.start_y - 15,
+            text=status_text, fill=status_color, font=('Arial', 9, 'bold'), tags="gates"
         )
     
     def draw_rover(self):
-        # Enhanced rover design to look more realistic
-        rover_body_color = '#2a5a8a'
-        rover_detail_color = '#4a8eff'
+        """Enhanced Mars rover design for ERC theme"""
+        # ERC Mars Rover color scheme
+        rover_body_color = self.colors['rover_dark']
+        rover_accent_color = self.colors['mars_orange']
+        rover_tech_color = self.colors['tech_blue']
         
-        # Main rover body (chassis)
-        body_width = self.rover_width * 0.8
-        body_height = self.rover_height * 0.6
+        # Main rover body (enhanced dimensions for Mars rover)
+        body_width = self.rover_width * 0.85
+        body_height = self.rover_height * 0.7
         
-        # Main chassis
+        # Main chassis with Mars mission styling
         self.canvas.create_rectangle(
             self.rover_x - body_width/2, self.rover_y - body_height/2,
             self.rover_x + body_width/2, self.rover_y + body_height/2,
-            fill=rover_body_color, outline='#ffffff', width=2, tags="rover"
+            fill=rover_body_color, outline=rover_accent_color, width=3, tags="rover"
         )
         
-        # Command module (smaller rectangle on top)
-        module_width = body_width * 0.6
-        module_height = body_height * 0.4
-        module_y = self.rover_y - body_height/2 - module_height/2
+        # Central command module (Mars mission control)
+        module_width = body_width * 0.7
+        module_height = body_height * 0.5
+        module_y = self.rover_y - body_height/2 - module_height/2 - 2
         
         self.canvas.create_rectangle(
             self.rover_x - module_width/2, module_y - module_height/2,
             self.rover_x + module_width/2, module_y + module_height/2,
-            fill='#1a4a6a', outline='#ffffff', width=1, tags="rover"
+            fill=self.colors['shadow_brown'], outline=rover_accent_color, width=2, tags="rover"
         )
         
-        # Draw wheels/tracks
-        wheel_radius = 8
-        wheel_color = '#333333'
+        # Mars mission equipment pods (left and right)
+        pod_width = 15
+        pod_height = 20
         
-        # Left wheels
+        # Left equipment pod
+        self.canvas.create_rectangle(
+            self.rover_x - body_width/2 - 5, self.rover_y - pod_height/2,
+            self.rover_x - body_width/2 + pod_width - 5, self.rover_y + pod_height/2,
+            fill=rover_tech_color, outline=self.colors['primary_text'], width=1, tags="rover"
+        )
+        
+        # Right equipment pod
+        self.canvas.create_rectangle(
+            self.rover_x + body_width/2 - pod_width + 5, self.rover_y - pod_height/2,
+            self.rover_x + body_width/2 + 5, self.rover_y + pod_height/2,
+            fill=rover_tech_color, outline=self.colors['primary_text'], width=1, tags="rover"
+        )
+        
+        # Enhanced wheel system - 6 wheels for Mars terrain
+        wheel_radius = 10
+        wheel_color = self.colors['space_black']
+        wheel_rim_color = rover_accent_color
+        
+        # Calculate wheel positions (3 on each side)
+        wheel_positions = []
         for i in range(3):
-            wheel_x = self.rover_x - body_width/2 + 20 + i * 30
-            wheel_y = self.rover_y + body_height/2 + wheel_radius - 3
-            
-            # Wheel
+            wheel_x = self.rover_x - body_width/2 + 25 + i * (body_width - 50) / 2
+            wheel_positions.append(wheel_x)
+        
+        # Draw all 6 wheels (top and bottom)
+        for wheel_x in wheel_positions:
+            # Top wheels
+            wheel_y = self.rover_y - body_height/2 - wheel_radius + 2
             self.canvas.create_oval(
                 wheel_x - wheel_radius, wheel_y - wheel_radius,
                 wheel_x + wheel_radius, wheel_y + wheel_radius,
-                fill=wheel_color, outline='#666666', width=2, tags="rover"
+                fill=wheel_color, outline=wheel_rim_color, width=2, tags="rover"
             )
+            # Wheel spokes
+            for spoke in range(4):
+                angle = spoke * math.pi / 2
+                spoke_x = wheel_x + wheel_radius * 0.6 * math.cos(angle)
+                spoke_y = wheel_y + wheel_radius * 0.6 * math.sin(angle)
+                self.canvas.create_line(wheel_x, wheel_y, spoke_x, spoke_y,
+                                      fill=wheel_rim_color, width=1, tags="rover")
             
-            # Wheel center
-            self.canvas.create_oval(
-                wheel_x - 3, wheel_y - 3,
-                wheel_x + 3, wheel_y + 3,
-                fill='#666666', outline='#888888', tags="rover"
-            )
-        
-        # Right wheels
-        for i in range(3):
-            wheel_x = self.rover_x - body_width/2 + 20 + i * 30
-            wheel_y = self.rover_y - body_height/2 - wheel_radius + 3
-            
-            # Wheel
+            # Bottom wheels
+            wheel_y = self.rover_y + body_height/2 + wheel_radius - 2
             self.canvas.create_oval(
                 wheel_x - wheel_radius, wheel_y - wheel_radius,
                 wheel_x + wheel_radius, wheel_y + wheel_radius,
-                fill=wheel_color, outline='#666666', width=2, tags="rover"
+                fill=wheel_color, outline=wheel_rim_color, width=2, tags="rover"
             )
-            
-            # Wheel center
-            self.canvas.create_oval(
-                wheel_x - 3, wheel_y - 3,
-                wheel_x + 3, wheel_y + 3,
-                fill='#666666', outline='#888888', tags="rover"
-            )
+            # Wheel spokes
+            for spoke in range(4):
+                angle = spoke * math.pi / 2
+                spoke_x = wheel_x + wheel_radius * 0.6 * math.cos(angle)
+                spoke_y = wheel_y + wheel_radius * 0.6 * math.sin(angle)
+                self.canvas.create_line(wheel_x, wheel_y, spoke_x, spoke_y,
+                                      fill=wheel_rim_color, width=1, tags="rover")
         
-        # Solar panels
-        panel_width = body_width * 0.9
-        panel_height = 6
-        panel_y = self.rover_y - body_height/2 - 8
+        # Enhanced solar panel array
+        panel_width = body_width * 1.1
+        panel_height = 8
+        panel_y = self.rover_y - body_height/2 - 12
         
         self.canvas.create_rectangle(
             self.rover_x - panel_width/2, panel_y - panel_height/2,
             self.rover_x + panel_width/2, panel_y + panel_height/2,
-            fill='#1a1a4a', outline='#4a4aff', width=1, tags="rover"
+            fill=self.colors['space_black'], outline=rover_tech_color, width=2, tags="rover"
         )
         
-        # Solar panel grid
-        for i in range(8):
-            x = self.rover_x - panel_width/2 + 10 + i * 15
-            self.canvas.create_line(x, panel_y - panel_height/2 + 1,
-                                  x, panel_y + panel_height/2 - 1,
-                                  fill='#6a6aff', width=1, tags="rover")
+        # Solar panel grid pattern
+        for i in range(10):
+            x = self.rover_x - panel_width/2 + 8 + i * (panel_width - 16) / 9
+            self.canvas.create_line(x, panel_y - panel_height/2 + 2,
+                                  x, panel_y + panel_height/2 - 2,
+                                  fill=rover_tech_color, width=1, tags="rover")
         
-        # Antenna
-        antenna_x = self.rover_x + body_width/2 - 10
-        antenna_base_y = module_y - module_height/2
-        antenna_tip_y = antenna_base_y - 15
+        # Communication array (mast with dish)
+        mast_x = self.rover_x + body_width/2 - 20
+        mast_base_y = module_y - module_height/2
+        mast_tip_y = mast_base_y - 20
         
-        self.canvas.create_line(antenna_x, antenna_base_y, antenna_x, antenna_tip_y,
-                              fill='#ffffff', width=3, tags="rover")
-        self.canvas.create_oval(antenna_x - 3, antenna_tip_y - 3,
-                              antenna_x + 3, antenna_tip_y + 3,
-                              fill='#ff0000', outline='#ffffff', tags="rover")
+        # Mast
+        self.canvas.create_line(mast_x, mast_base_y, mast_x, mast_tip_y,
+                              fill=self.colors['primary_text'], width=4, tags="rover")
         
-        # Front sensor array
-        sensor_x = self.rover_x + body_width/2 - 5
+        # Communication dish
+        self.canvas.create_oval(mast_x - 8, mast_tip_y - 6,
+                              mast_x + 8, mast_tip_y + 2,
+                              fill=rover_accent_color, outline=self.colors['primary_text'], width=2, tags="rover")
+        
+        # Central communication beacon
+        self.canvas.create_oval(mast_x - 2, mast_tip_y - 8,
+                              mast_x + 2, mast_tip_y - 4,
+                              fill=self.colors['alert_red'], outline=self.colors['primary_text'], tags="rover")
+        
+        # Front sensor array (Mars exploration sensors)
+        sensor_x = self.rover_x + body_width/2 - 8
+        sensor_colors = [self.colors['system_green'], self.colors['mission_yellow'], self.colors['alert_red']]
+        
         for i in range(3):
-            sensor_y = self.rover_y - 8 + i * 8
-            self.canvas.create_oval(sensor_x - 2, sensor_y - 2,
-                                  sensor_x + 2, sensor_y + 2,
-                                  fill='#00ff00', outline='#ffffff', tags="rover")
+            sensor_y = self.rover_y - 12 + i * 12
+            self.canvas.create_oval(sensor_x - 3, sensor_y - 3,
+                                  sensor_x + 3, sensor_y + 3,
+                                  fill=sensor_colors[i], outline=self.colors['primary_text'], tags="rover")
         
-        # Direction indicator (enhanced arrow)
-        arrow_x = self.rover_x + body_width/2 + 8
+        # Robotic arm attachment point
+        arm_base_x = self.rover_x - body_width/2 + 15
+        arm_base_y = self.rover_y
+        self.canvas.create_oval(arm_base_x - 4, arm_base_y - 4,
+                              arm_base_x + 4, arm_base_y + 4,
+                              fill=self.colors['shadow_brown'], outline=rover_accent_color, width=2, tags="rover")
+        
+        # Direction indicator (enhanced Mars rover style)
+        arrow_x = self.rover_x + body_width/2 + 12
         arrow_points = [
             arrow_x, self.rover_y,
-            arrow_x + 15, self.rover_y - 8,
-            arrow_x + 10, self.rover_y,
-            arrow_x + 15, self.rover_y + 8
+            arrow_x + 18, self.rover_y - 10,
+            arrow_x + 12, self.rover_y,
+            arrow_x + 18, self.rover_y + 10
         ]
         
-        self.canvas.create_polygon(arrow_points, fill='#ffff00', outline='#ffffff', width=2, tags="rover")
+        self.canvas.create_polygon(arrow_points, fill=self.colors['mission_yellow'], 
+                                 outline=self.colors['primary_text'], width=2, tags="rover")
         
-        # Rover identification label
-        self.canvas.create_text(self.rover_x, self.rover_y + 2,
-                              text="MARS ROVER", fill='#ffffff', 
+        # Rover identification and mission status
+        self.canvas.create_text(self.rover_x, self.rover_y + 5,
+                              text="ERC MARS ROVER", fill=self.colors['primary_text'], 
                               font=('Arial', 8, 'bold'), tags="rover")
         
-        # Status indicator
-        status_x = self.rover_x - body_width/2 - 20
-        self.canvas.create_oval(status_x - 4, self.rover_y - 4,
-                              status_x + 4, self.rover_y + 4,
-                              fill='#00ff00', outline='#ffffff', width=1, tags="rover")
-        self.canvas.create_text(status_x, self.rover_y - 15,
-                              text="ACTIVE", fill='#00ff00', 
-                              font=('Arial', 7), tags="rover")
+        # Mission status indicator
+        status_x = self.rover_x - body_width/2 - 25
+        self.canvas.create_oval(status_x - 5, self.rover_y - 5,
+                              status_x + 5, self.rover_y + 5,
+                              fill=self.colors['system_green'], outline=self.colors['primary_text'], width=2, tags="rover")
+        self.canvas.create_text(status_x, self.rover_y - 18,
+                              text="MISSION", fill=self.colors['system_green'], 
+                              font=('Arial', 7, 'bold'), tags="rover")
+        self.canvas.create_text(status_x, self.rover_y - 28,
+                              text="ACTIVE", fill=self.colors['system_green'], 
+                              font=('Arial', 7, 'bold'), tags="rover")
 
     def update_sensors(self):
         # Calculate rover edges
@@ -1432,38 +1645,54 @@ class AirlockGUI:
         else:
             self.sensor_states['GATE_SAFETY_B'] = False
         
-        # Update sensor labels
+        # Update sensor labels with HIGH CONTRAST ERC theme colors
         for name, state in self.sensor_states.items():
             if name in self.sensor_labels:
                 label = self.sensor_labels[name]
                 if state:
-                    label.config(text="ON", bg='#00ff00', fg='black')
+                    # ACTIVE - bright green background with black text for maximum visibility
+                    label.config(text="🟢 ACTIVE", bg='#00FF00', fg='#000000', font=('Arial', 10, 'bold'))
                 else:
-                    label.config(text="OFF", bg='#4a4a4a', fg='white')
+                    # INACTIVE - dark background with dim text
+                    label.config(text="⚫ OFFLINE", bg='#1a1a1a', fg='#666666', font=('Arial', 10, 'normal'))
         
-        # Update gate moving states in labels
-        self.sensor_labels['GATE_MOVING_A'].config(
-            text="ON" if self.gate_a_moving else "OFF",
-            bg='#00ff00' if self.gate_a_moving else '#4a4a4a',
-            fg='black' if self.gate_a_moving else 'white'
-        )
-        self.sensor_labels['GATE_MOVING_B'].config(
-            text="ON" if self.gate_b_moving else "OFF",
-            bg='#00ff00' if self.gate_b_moving else '#4a4a4a',
-            fg='black' if self.gate_b_moving else 'white'
-        )
+        # Update gate moving states with HIGH CONTRAST
+        if self.gate_a_moving:
+            self.sensor_labels['GATE_MOVING_A'].config(
+                text="🟡 MOVING", bg='#FFFF00', fg='#000000', font=('Arial', 10, 'bold')
+            )
+        else:
+            self.sensor_labels['GATE_MOVING_A'].config(
+                text="⚫ STATIC", bg='#1a1a1a', fg='#666666', font=('Arial', 10, 'normal')
+            )
+            
+        if self.gate_b_moving:
+            self.sensor_labels['GATE_MOVING_B'].config(
+                text="🟡 MOVING", bg='#FFFF00', fg='#000000', font=('Arial', 10, 'bold')
+            )
+        else:
+            self.sensor_labels['GATE_MOVING_B'].config(
+                text="⚫ STATIC", bg='#1a1a1a', fg='#666666', font=('Arial', 10, 'normal')
+            )
         
-        # Update gate request states in labels
-        self.sensor_labels['GATE_REQUEST_A'].config(
-            text="ON" if self.gate_requests['GATE_REQUEST_A'] else "OFF",
-            bg='#00ff00' if self.gate_requests['GATE_REQUEST_A'] else '#4a4a4a',
-            fg='black' if self.gate_requests['GATE_REQUEST_A'] else 'white'
-        )
-        self.sensor_labels['GATE_REQUEST_B'].config(
-            text="ON" if self.gate_requests['GATE_REQUEST_B'] else "OFF",
-            bg='#00ff00' if self.gate_requests['GATE_REQUEST_B'] else '#4a4a4a',
-            fg='black' if self.gate_requests['GATE_REQUEST_B'] else 'white'
-        )
+        # Update gate request states with HIGH CONTRAST
+        if self.gate_requests['GATE_REQUEST_A']:
+            self.sensor_labels['GATE_REQUEST_A'].config(
+                text="🔶 REQUESTED", bg='#FF6B35', fg='#FFFFFF', font=('Arial', 10, 'bold')
+            )
+        else:
+            self.sensor_labels['GATE_REQUEST_A'].config(
+                text="⚫ IDLE", bg='#1a1a1a', fg='#666666', font=('Arial', 10, 'normal')
+            )
+            
+        if self.gate_requests['GATE_REQUEST_B']:
+            self.sensor_labels['GATE_REQUEST_B'].config(
+                text="🔶 REQUESTED", bg='#FF6B35', fg='#FFFFFF', font=('Arial', 10, 'bold')
+            )
+        else:
+            self.sensor_labels['GATE_REQUEST_B'].config(
+                text="⚫ IDLE", bg='#1a1a1a', fg='#666666', font=('Arial', 10, 'normal')
+            )
         
         # Request throttled update instead of immediate update
         self.request_update()
