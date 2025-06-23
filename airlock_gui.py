@@ -378,31 +378,119 @@ class AirlockGUI:
         # Clear canvas
         self.canvas.delete("all")
         
-        # Draw zones
-        # Front zone
-        self.canvas.create_rectangle(self.start_x, self.start_y, 
-                                   self.start_x + self.front_zone_width, 
-                                   self.start_y + self.airlock_height,
-                                   fill='#3a3a3a', outline='white', width=2, tags="static")
-        self.canvas.create_text(self.start_x + self.front_zone_width/2, self.start_y + 20,
-                              text="FRONT ZONE", fill='white', font=('Arial', 14, 'bold'), tags="static")
+        # Draw background grid pattern for tech look
+        grid_size = 20
+        for x in range(0, 1000, grid_size):
+            self.canvas.create_line(x, 0, x, 250, fill='#333333', width=1, tags="static")
+        for y in range(0, 250, grid_size):
+            self.canvas.create_line(0, y, 1000, y, fill='#333333', width=1, tags="static")
         
-        # Middle zone
-        self.canvas.create_rectangle(self.start_x + self.front_zone_width, self.start_y,
-                                   self.start_x + self.front_zone_width + self.middle_zone_width,
-                                   self.start_y + self.airlock_height,
-                                   fill='#4a4a4a', outline='white', width=2, tags="static")
-        self.canvas.create_text(self.start_x + self.front_zone_width + self.middle_zone_width/2, self.start_y + 20,
-                              text="MIDDLE ZONE", fill='white', font=('Arial', 14, 'bold'), tags="static")
+        # Draw main airlock chamber with rounded corners and depth
+        chamber_y_offset = 10
+        chamber_height = self.airlock_height - 20
+        
+        # Draw outer shell with metallic look
+        self.canvas.create_rectangle(self.start_x - 5, self.start_y - 5, 
+                                   self.start_x + self.airlock_width + 5, 
+                                   self.start_y + self.airlock_height + 5,
+                                   fill='#2a2a2a', outline='#666666', width=4, tags="static")
+        
+        # Front zone with enhanced details
+        front_x = self.start_x
+        front_w = self.front_zone_width
+        
+        # Main chamber
+        self.canvas.create_rectangle(front_x, self.start_y + chamber_y_offset, 
+                                   front_x + front_w, 
+                                   self.start_y + chamber_height,
+                                   fill='#1a4a5c', outline='#4a9eff', width=3, tags="static")
+        
+        # Add rivets and detail lines
+        for i in range(3):
+            y_pos = self.start_y + 30 + i * 40
+            self.canvas.create_oval(front_x + 10, y_pos, front_x + 15, y_pos + 5,
+                                  fill='#666666', outline='#888888', tags="static")
+            self.canvas.create_oval(front_x + front_w - 15, y_pos, front_x + front_w - 10, y_pos + 5,
+                                  fill='#666666', outline='#888888', tags="static")
+        
+        # Horizontal detail lines
+        for i in range(2):
+            y_pos = self.start_y + 50 + i * 60
+            self.canvas.create_line(front_x + 20, y_pos, front_x + front_w - 20, y_pos,
+                                  fill='#4a9eff', width=2, tags="static")
+        
+        self.canvas.create_text(front_x + front_w/2, self.start_y + 25,
+                              text="FRONT CHAMBER", fill='#4a9eff', 
+                              font=('Arial', 12, 'bold'), tags="static")
+        self.canvas.create_text(front_x + front_w/2, self.start_y + 40,
+                              text="ENTRY ZONE", fill='#ffffff', 
+                              font=('Arial', 9), tags="static")
+        
+        # Middle zone (pressurization chamber)
+        middle_x = self.start_x + self.front_zone_width
+        middle_w = self.middle_zone_width
+        
+        self.canvas.create_rectangle(middle_x, self.start_y + chamber_y_offset,
+                                   middle_x + middle_w,
+                                   self.start_y + chamber_height,
+                                   fill='#4a2a1a', outline='#ff9a4a', width=3, tags="static")
+        
+        # Pressure indicator rings
+        for i in range(4):
+            ring_y = self.start_y + 40 + i * 25
+            self.canvas.create_oval(middle_x + middle_w/2 - 15, ring_y,
+                                  middle_x + middle_w/2 + 15, ring_y + 8,
+                                  fill='', outline='#ff9a4a', width=2, tags="static")
+        
+        # Pressure lines
+        for i in range(6):
+            x_pos = middle_x + 30 + i * 80
+            self.canvas.create_line(x_pos, self.start_y + 20, x_pos, self.start_y + chamber_height - 10,
+                                  fill='#ff6a2a', width=1, dash=(5, 5), tags="static")
+        
+        self.canvas.create_text(middle_x + middle_w/2, self.start_y + 25,
+                              text="TRANSITION CHAMBER", fill='#ff9a4a', 
+                              font=('Arial', 12, 'bold'), tags="static")
+        self.canvas.create_text(middle_x + middle_w/2, self.start_y + 40,
+                              text="PRESSURIZATION ZONE", fill='#ffffff', 
+                              font=('Arial', 9), tags="static")
         
         # Back zone
-        self.canvas.create_rectangle(self.start_x + self.front_zone_width + self.middle_zone_width, self.start_y,
-                                   self.start_x + self.airlock_width,
-                                   self.start_y + self.airlock_height,
-                                   fill='#3a3a3a', outline='white', width=2, tags="static")
-        self.canvas.create_text(self.start_x + self.front_zone_width + self.middle_zone_width + self.back_zone_width/2, 
-                              self.start_y + 20, text="BACK ZONE", fill='white', font=('Arial', 14, 'bold'), tags="static")
+        back_x = self.start_x + self.front_zone_width + self.middle_zone_width
+        back_w = self.back_zone_width
         
+        self.canvas.create_rectangle(back_x, self.start_y + chamber_y_offset,
+                                   back_x + back_w,
+                                   self.start_y + chamber_height,
+                                   fill='#1a5c1a', outline='#4aff4a', width=3, tags="static")
+        
+        # Add exit indicators
+        for i in range(3):
+            y_pos = self.start_y + 30 + i * 40
+            self.canvas.create_oval(back_x + 10, y_pos, back_x + 15, y_pos + 5,
+                                  fill='#666666', outline='#888888', tags="static")
+            self.canvas.create_oval(back_x + back_w - 15, y_pos, back_x + back_w - 10, y_pos + 5,
+                                  fill='#666666', outline='#888888', tags="static")
+        
+        # Exit arrows
+        for i in range(2):
+            arrow_x = back_x + 40 + i * 60
+            self.canvas.create_polygon(arrow_x, self.start_y + 70,
+                                     arrow_x + 15, self.start_y + 60,
+                                     arrow_x + 15, self.start_y + 65,
+                                     arrow_x + 25, self.start_y + 65,
+                                     arrow_x + 25, self.start_y + 75,
+                                     arrow_x + 15, self.start_y + 75,
+                                     arrow_x + 15, self.start_y + 80,
+                                     fill='#4aff4a', outline='#ffffff', tags="static")
+        
+        self.canvas.create_text(back_x + back_w/2, self.start_y + 25,
+                              text="EXIT CHAMBER", fill='#4aff4a', 
+                              font=('Arial', 12, 'bold'), tags="static")
+        self.canvas.create_text(back_x + back_w/2, self.start_y + 40,
+                              text="DECONTAMINATION ZONE", fill='#ffffff', 
+                              font=('Arial', 9), tags="static")
+    
     def update_display(self):
         """Update only the dynamic parts of the display - now throttled"""
         self.request_update()
@@ -467,241 +555,6 @@ class AirlockGUI:
         self.canvas.create_text(self.start_x + self.gate_b_x, self.start_y + self.airlock_height + 20,
                               text="Gate B Safety", fill='#ff0000' if self.sensor_states['GATE_SAFETY_B'] else '#550000',
                               font=('Arial', 10), tags="sensor_zones")
-        
-    def draw_gates(self):
-        # Update and draw particles (but don't delete all particles every frame)
-        self.gate_a_particles = self.update_particles(self.gate_a_particles)
-        self.gate_b_particles = self.update_particles(self.gate_b_particles)
-        
-        # Only draw particles if there are particles to show
-        if self.gate_a_particles or self.gate_b_particles:
-            self.draw_particles(self.gate_a_particles)
-            self.draw_particles(self.gate_b_particles)
-        
-        # Gate A with enhanced animation
-        if self.gate_a_moving:
-            # Use smooth cubic easing for both opening and closing
-            eased_progress = self.ease_in_out_cubic(self.gate_animation_progress_a)
-        else:
-            eased_progress = self.gate_animation_progress_a
-        
-        # Smooth top-to-bottom animation
-        # When closed: gate covers entire opening (y=start_y, height=full)
-        # When open: gate is pushed down to bottom (y=start_y+height, height=minimal)
-        gate_a_y = self.start_y + (self.airlock_height * eased_progress)
-        gate_a_height = self.airlock_height * (1 - eased_progress)
-        
-        # Ensure minimum visibility when fully open
-        if gate_a_height < 3:
-            gate_a_height = 3  # Keep a small visible portion when fully open
-        
-        # Enhanced gate colors with smoother effects
-        if self.gate_a_moving:
-            # Smoother pulsing effect (reduced frequency)
-            pulse = abs(math.sin(time.time() * 3)) * 0.2 + 0.8  # Slower and subtler pulse
-            gate_a_color = f"#{int(255*pulse):02x}{int(255*pulse):02x}00"  # Pulsing yellow
-            
-            # Simplified motion blur - just one subtle shadow
-            blur_alpha = 30
-            blur_color = f"#{blur_alpha:02x}{blur_alpha:02x}00"
-            self.canvas.create_rectangle(
-                self.start_x + self.gate_a_x - self.gate_width/2 - 2, gate_a_y - 2,
-                self.start_x + self.gate_a_x + self.gate_width/2 + 2,
-                gate_a_y + gate_a_height + 2,
-                fill=blur_color, outline="", tags="gates"
-            )
-        else:
-            gate_a_color = '#00ff00' if self.gate_a_open else '#ff0000'
-        
-        # Main gate rectangle
-        self.canvas.create_rectangle(
-            self.start_x + self.gate_a_x - self.gate_width/2, gate_a_y,
-            self.start_x + self.gate_a_x + self.gate_width/2,
-            gate_a_y + gate_a_height,
-            fill=gate_a_color, outline='white', width=2, tags="gates"
-        )
-        
-        # Add mechanical details (only when gate is substantially visible)
-        if gate_a_height > 50:  # Increased threshold to reduce flicker
-            segment_height = 40  # Larger segments, fewer lines
-            for y in range(int(gate_a_y + segment_height), int(gate_a_y + gate_a_height), segment_height):
-                self.canvas.create_line(
-                    self.start_x + self.gate_a_x - self.gate_width/2 + 1, y,
-                    self.start_x + self.gate_a_x + self.gate_width/2 - 1, y,
-                    fill='#333333', width=1, tags="gates"
-                )
-        
-        # Gate A label with status
-        status_text = "OPENING" if (self.gate_a_moving and self.gate_a_target_state) else \
-                     "CLOSING" if (self.gate_a_moving and not self.gate_a_target_state) else \
-                     "OPEN" if self.gate_a_open else "CLOSED"
-        
-        self.canvas.create_text(
-            self.start_x + self.gate_a_x, self.start_y - 25,
-            text=f"Gate A", fill='white', font=('Arial', 12, 'bold'), tags="gates"
-        )
-        self.canvas.create_text(
-            self.start_x + self.gate_a_x, self.start_y - 10,
-            text=f"[{status_text}]", fill='yellow' if self.gate_a_moving else 'white', 
-            font=('Arial', 9), tags="gates"
-        )
-        
-        # Gate B with enhanced animation (same logic as Gate A)
-        if self.gate_b_moving:
-            # Use smooth cubic easing for both opening and closing
-            eased_progress = self.ease_in_out_cubic(self.gate_animation_progress_b)
-        else:
-            eased_progress = self.gate_animation_progress_b
-        
-        # Smooth top-to-bottom animation
-        gate_b_y = self.start_y + (self.airlock_height * eased_progress)
-        gate_b_height = self.airlock_height * (1 - eased_progress)
-        
-        # Ensure minimum visibility when fully open
-        if gate_b_height < 3:
-            gate_b_height = 3  # Keep a small visible portion when fully open
-        
-        if self.gate_b_moving:
-            # Smoother pulsing effect (reduced frequency)
-            pulse = abs(math.sin(time.time() * 3)) * 0.2 + 0.8  # Slower and subtler pulse
-            gate_b_color = f"#{int(255*pulse):02x}{int(255*pulse):02x}00"  # Pulsing yellow
-            
-            # Simplified motion blur - just one subtle shadow
-            blur_alpha = 30
-            blur_color = f"#{blur_alpha:02x}{blur_alpha:02x}00"
-            self.canvas.create_rectangle(
-                self.start_x + self.gate_b_x - self.gate_width/2 - 2, gate_b_y - 2,
-                self.start_x + self.gate_b_x + self.gate_width/2 + 2,
-                gate_b_y + gate_b_height + 2,
-                fill=blur_color, outline="", tags="gates"
-            )
-        else:
-            gate_b_color = '#00ff00' if self.gate_b_open else '#ff0000'
-        
-        # Main gate rectangle
-        self.canvas.create_rectangle(
-            self.start_x + self.gate_b_x - self.gate_width/2, gate_b_y,
-            self.start_x + self.gate_b_x + self.gate_width/2,
-            gate_b_y + gate_b_height,
-            fill=gate_b_color, outline='white', width=2, tags="gates"
-        )
-        
-        # Add mechanical details (only when gate is substantially visible)
-        if gate_b_height > 50:  # Increased threshold to reduce flicker
-            segment_height = 40  # Larger segments, fewer lines
-            for y in range(int(gate_b_y + segment_height), int(gate_b_y + gate_b_height), segment_height):
-                self.canvas.create_line(
-                    self.start_x + self.gate_b_x - self.gate_width/2 + 1, y,
-                    self.start_x + self.gate_b_x + self.gate_width/2 - 1, y,
-                    fill='#333333', width=1, tags="gates"
-                )
-        
-        # Gate B label with status
-        status_text = "OPENING" if (self.gate_b_moving and self.gate_b_target_state) else \
-                     "CLOSING" if (self.gate_b_moving and not self.gate_b_target_state) else \
-                     "OPEN" if self.gate_b_open else "CLOSED"
-        
-        self.canvas.create_text(
-            self.start_x + self.gate_b_x, self.start_y - 25,
-            text=f"Gate B", fill='white', font=('Arial', 12, 'bold'), tags="gates"
-        )
-        self.canvas.create_text(
-            self.start_x + self.gate_b_x, self.start_y - 10,
-            text=f"[{status_text}]", fill='yellow' if self.gate_b_moving else 'white', 
-            font=('Arial', 9), tags="gates"
-        )
-    
-    def draw_rover(self):
-        # Draw rover as a rectangle with direction indicator
-        rover_color = '#0088ff'
-        self.canvas.create_rectangle(self.rover_x - self.rover_width/2,
-                                   self.rover_y - self.rover_height/2,
-                                   self.rover_x + self.rover_width/2,
-                                   self.rover_y + self.rover_height/2,
-                                   fill=rover_color, outline='white', width=3, tags="rover")
-        
-        # Add direction indicator
-        self.canvas.create_polygon(self.rover_x + self.rover_width/2 - 10, self.rover_y - 15,
-                                 self.rover_x + self.rover_width/2 + 10, self.rover_y,
-                                 self.rover_x + self.rover_width/2 - 10, self.rover_y + 15,
-                                 fill='yellow', outline='white', tags="rover")
-        
-        # Add rover label
-        self.canvas.create_text(self.rover_x, self.rover_y,
-                              text="ROVER", fill='white', font=('Arial', 10, 'bold'), tags="rover")
-        
-    def update_sensors(self):
-        # Calculate rover edges
-        rover_left = self.rover_x - self.rover_width/2
-        rover_right = self.rover_x + self.rover_width/2
-        
-        # Reset all sensors
-        old_states = self.sensor_states.copy()
-        
-        # Calculate sensor line positions at center of each zone
-        front_sensor_x = self.start_x + self.front_zone_width / 2
-        middle_sensor_x = self.start_x + self.front_zone_width + self.middle_zone_width / 2
-        back_sensor_x = self.start_x + self.front_zone_width + self.middle_zone_width + self.back_zone_width / 2
-        
-        # Check presence sensors (trigger if any part of rover crosses sensor line)
-        self.sensor_states['PRESENCE_FRONT'] = rover_left <= front_sensor_x <= rover_right
-        self.sensor_states['PRESENCE_MIDDLE'] = rover_left <= middle_sensor_x <= rover_right
-        self.sensor_states['PRESENCE_BACK'] = rover_left <= back_sensor_x <= rover_right
-        
-        # Check gate safety sensors (based on rover edges, keep existing logic)
-        safety_zone_width = 60
-        
-        # Gate A safety
-        gate_a_pos = self.start_x + self.gate_a_x
-        if (rover_right > gate_a_pos - safety_zone_width/2 and 
-            rover_left < gate_a_pos + safety_zone_width/2):
-            self.sensor_states['GATE_SAFETY_A'] = True
-        else:
-            self.sensor_states['GATE_SAFETY_A'] = False
-        
-        # Gate B safety
-        gate_b_pos = self.start_x + self.gate_b_x
-        if (rover_right > gate_b_pos - safety_zone_width/2 and 
-            rover_left < gate_b_pos + safety_zone_width/2):
-            self.sensor_states['GATE_SAFETY_B'] = True
-        else:
-            self.sensor_states['GATE_SAFETY_B'] = False
-        
-        # Update sensor labels
-        for name, state in self.sensor_states.items():
-            if name in self.sensor_labels:
-                label = self.sensor_labels[name]
-                if state:
-                    label.config(text="ON", bg='#00ff00', fg='black')
-                else:
-                    label.config(text="OFF", bg='#4a4a4a', fg='white')
-        
-        # Update gate moving states in labels
-        self.sensor_labels['GATE_MOVING_A'].config(
-            text="ON" if self.gate_a_moving else "OFF",
-            bg='#00ff00' if self.gate_a_moving else '#4a4a4a',
-            fg='black' if self.gate_a_moving else 'white'
-        )
-        self.sensor_labels['GATE_MOVING_B'].config(
-            text="ON" if self.gate_b_moving else "OFF",
-            bg='#00ff00' if self.gate_b_moving else '#4a4a4a',
-            fg='black' if self.gate_b_moving else 'white'
-        )
-        
-        # Update gate request states in labels
-        self.sensor_labels['GATE_REQUEST_A'].config(
-            text="ON" if self.gate_requests['GATE_REQUEST_A'] else "OFF",
-            bg='#00ff00' if self.gate_requests['GATE_REQUEST_A'] else '#4a4a4a',
-            fg='black' if self.gate_requests['GATE_REQUEST_A'] else 'white'
-        )
-        self.sensor_labels['GATE_REQUEST_B'].config(
-            text="ON" if self.gate_requests['GATE_REQUEST_B'] else "OFF",
-            bg='#00ff00' if self.gate_requests['GATE_REQUEST_B'] else '#4a4a4a',
-            fg='black' if self.gate_requests['GATE_REQUEST_B'] else 'white'
-        )
-        
-        # Request throttled update instead of immediate update
-        self.request_update()
     
     def check_collision(self, new_x):
         # No collision detection - allow free movement for testing
@@ -1246,6 +1099,374 @@ class AirlockGUI:
         self.draw_sensor_zones()
         self.draw_gates()
         self.draw_rover()
+
+    def draw_gates(self):
+        # Update and draw particles (but don't delete all particles every frame)
+        self.gate_a_particles = self.update_particles(self.gate_a_particles)
+        self.gate_b_particles = self.update_particles(self.gate_b_particles)
+        
+        # Only draw particles if there are particles to show
+        if self.gate_a_particles or self.gate_b_particles:
+            self.draw_particles(self.gate_a_particles)
+            self.draw_particles(self.gate_b_particles)
+        
+        # Gate A with enhanced realistic design
+        if self.gate_a_moving:
+            eased_progress = self.ease_in_out_cubic(self.gate_animation_progress_a)
+        else:
+            eased_progress = self.gate_animation_progress_a
+        
+        # Calculate gate positions for sliding down effect
+        gate_a_y = self.start_y + (self.airlock_height * eased_progress)
+        gate_a_height = self.airlock_height * (1 - eased_progress)
+        
+        if gate_a_height < 5:
+            gate_a_height = 5  # Minimum visible height
+        
+        # Enhanced gate colors and effects
+        if self.gate_a_moving:
+            pulse = abs(math.sin(time.time() * 4)) * 0.3 + 0.7
+            gate_a_color = f"#{int(255*pulse):02x}{int(200*pulse):02x}00"
+            
+            # Add motion blur effect
+            for offset in range(3):
+                blur_alpha = int(60 - offset * 20)
+                blur_color = f"#{blur_alpha:02x}{blur_alpha:02x}00"
+                self.canvas.create_rectangle(
+                    self.start_x + self.gate_a_x - self.gate_width/2 - offset, gate_a_y - offset,
+                    self.start_x + self.gate_a_x + self.gate_width/2 + offset,
+                    gate_a_y + gate_a_height + offset,
+                    fill=blur_color, outline="", tags="gates"
+                )
+        else:
+            gate_a_color = '#00cc00' if self.gate_a_open else '#cc0000'
+        
+        # Main gate body with metallic look
+        gate_x_left = self.start_x + self.gate_a_x - self.gate_width/2
+        gate_x_right = self.start_x + self.gate_a_x + self.gate_width/2
+        
+        # Draw gate segments for realistic look
+        self.canvas.create_rectangle(
+            gate_x_left, gate_a_y,
+            gate_x_right, gate_a_y + gate_a_height,
+            fill=gate_a_color, outline='#ffffff', width=2, tags="gates"
+        )
+        
+        # Add realistic gate details
+        if gate_a_height > 30:
+            # Horizontal segments
+            segment_count = max(2, int(gate_a_height / 25))
+            for i in range(1, segment_count):
+                y = gate_a_y + (gate_a_height / segment_count) * i
+                self.canvas.create_line(gate_x_left + 1, y, gate_x_right - 1, y,
+                                      fill='#333333', width=2, tags="gates")
+            
+            # Side rails
+            self.canvas.create_rectangle(gate_x_left - 3, gate_a_y - 5,
+                                       gate_x_left, gate_a_y + gate_a_height + 5,
+                                       fill='#444444', outline='#666666', tags="gates")
+            self.canvas.create_rectangle(gate_x_right, gate_a_y - 5,
+                                       gate_x_right + 3, gate_a_y + gate_a_height + 5,
+                                       fill='#444444', outline='#666666', tags="gates")
+        
+        # Gate status with enhanced styling
+        status_text = "OPENING" if (self.gate_a_moving and self.gate_a_target_state) else \
+                     "CLOSING" if (self.gate_a_moving and not self.gate_a_target_state) else \
+                     "OPEN" if self.gate_a_open else "SEALED"
+        
+        status_color = '#ffff00' if self.gate_a_moving else ('#00ff00' if self.gate_a_open else '#ff0000')
+        
+        # Gate label background
+        self.canvas.create_rectangle(
+            self.start_x + self.gate_a_x - 35, self.start_y - 35,
+            self.start_x + self.gate_a_x + 35, self.start_y - 5,
+            fill='#1a1a1a', outline='#666666', width=1, tags="gates"
+        )
+        
+        self.canvas.create_text(
+            self.start_x + self.gate_a_x, self.start_y - 25,
+            text="GATE A", fill='#4a9eff', font=('Arial', 11, 'bold'), tags="gates"
+        )
+        self.canvas.create_text(
+            self.start_x + self.gate_a_x, self.start_y - 12,
+            text=status_text, fill=status_color, font=('Arial', 8, 'bold'), tags="gates"
+        )
+        
+        # Gate B with same enhanced design
+        if self.gate_b_moving:
+            eased_progress = self.ease_in_out_cubic(self.gate_animation_progress_b)
+        else:
+            eased_progress = self.gate_animation_progress_b
+        
+        gate_b_y = self.start_y + (self.airlock_height * eased_progress)
+        gate_b_height = self.airlock_height * (1 - eased_progress)
+        
+        if gate_b_height < 5:
+            gate_b_height = 5
+        
+        if self.gate_b_moving:
+            pulse = abs(math.sin(time.time() * 4)) * 0.3 + 0.7
+            gate_b_color = f"#{int(255*pulse):02x}{int(200*pulse):02x}00"
+            
+            for offset in range(3):
+                blur_alpha = int(60 - offset * 20)
+                blur_color = f"#{blur_alpha:02x}{blur_alpha:02x}00"
+                self.canvas.create_rectangle(
+                    self.start_x + self.gate_b_x - self.gate_width/2 - offset, gate_b_y - offset,
+                    self.start_x + self.gate_b_x + self.gate_width/2 + offset,
+                    gate_b_y + gate_b_height + offset,
+                    fill=blur_color, outline="", tags="gates"
+                )
+        else:
+            gate_b_color = '#00cc00' if self.gate_b_open else '#cc0000'
+        
+        gate_x_left = self.start_x + self.gate_b_x - self.gate_width/2
+        gate_x_right = self.start_x + self.gate_b_x + self.gate_width/2
+        
+        self.canvas.create_rectangle(
+            gate_x_left, gate_b_y,
+            gate_x_right, gate_b_y + gate_b_height,
+            fill=gate_b_color, outline='#ffffff', width=2, tags="gates"
+        )
+        
+        if gate_b_height > 30:
+            segment_count = max(2, int(gate_b_height / 25))
+            for i in range(1, segment_count):
+                y = gate_b_y + (gate_b_height / segment_count) * i
+                self.canvas.create_line(gate_x_left + 1, y, gate_x_right - 1, y,
+                                      fill='#333333', width=2, tags="gates")
+            
+            self.canvas.create_rectangle(gate_x_left - 3, gate_b_y - 5,
+                                       gate_x_left, gate_b_y + gate_b_height + 5,
+                                       fill='#444444', outline='#666666', tags="gates")
+            self.canvas.create_rectangle(gate_x_right, gate_b_y - 5,
+                                       gate_x_right + 3, gate_b_y + gate_b_height + 5,
+                                       fill='#444444', outline='#666666', tags="gates")
+        
+        status_text = "OPENING" if (self.gate_b_moving and self.gate_b_target_state) else \
+                     "CLOSING" if (self.gate_b_moving and not self.gate_b_target_state) else \
+                     "OPEN" if self.gate_b_open else "SEALED"
+        
+        status_color = '#ffff00' if self.gate_b_moving else ('#00ff00' if self.gate_b_open else '#ff0000')
+        
+        self.canvas.create_rectangle(
+            self.start_x + self.gate_b_x - 35, self.start_y - 35,
+            self.start_x + self.gate_b_x + 35, self.start_y - 5,
+            fill='#1a1a1a', outline='#666666', width=1, tags="gates"
+        )
+        
+        self.canvas.create_text(
+            self.start_x + self.gate_b_x, self.start_y - 25,
+            text="GATE B", fill='#ff9a4a', font=('Arial', 11, 'bold'), tags="gates"
+        )
+        self.canvas.create_text(
+            self.start_x + self.gate_b_x, self.start_y - 12,
+            text=status_text, fill=status_color, font=('Arial', 8, 'bold'), tags="gates"
+        )
+    
+    def draw_rover(self):
+        # Enhanced rover design to look more realistic
+        rover_body_color = '#2a5a8a'
+        rover_detail_color = '#4a8eff'
+        
+        # Main rover body (chassis)
+        body_width = self.rover_width * 0.8
+        body_height = self.rover_height * 0.6
+        
+        # Main chassis
+        self.canvas.create_rectangle(
+            self.rover_x - body_width/2, self.rover_y - body_height/2,
+            self.rover_x + body_width/2, self.rover_y + body_height/2,
+            fill=rover_body_color, outline='#ffffff', width=2, tags="rover"
+        )
+        
+        # Command module (smaller rectangle on top)
+        module_width = body_width * 0.6
+        module_height = body_height * 0.4
+        module_y = self.rover_y - body_height/2 - module_height/2
+        
+        self.canvas.create_rectangle(
+            self.rover_x - module_width/2, module_y - module_height/2,
+            self.rover_x + module_width/2, module_y + module_height/2,
+            fill='#1a4a6a', outline='#ffffff', width=1, tags="rover"
+        )
+        
+        # Draw wheels/tracks
+        wheel_radius = 8
+        wheel_color = '#333333'
+        
+        # Left wheels
+        for i in range(3):
+            wheel_x = self.rover_x - body_width/2 + 20 + i * 30
+            wheel_y = self.rover_y + body_height/2 + wheel_radius - 3
+            
+            # Wheel
+            self.canvas.create_oval(
+                wheel_x - wheel_radius, wheel_y - wheel_radius,
+                wheel_x + wheel_radius, wheel_y + wheel_radius,
+                fill=wheel_color, outline='#666666', width=2, tags="rover"
+            )
+            
+            # Wheel center
+            self.canvas.create_oval(
+                wheel_x - 3, wheel_y - 3,
+                wheel_x + 3, wheel_y + 3,
+                fill='#666666', outline='#888888', tags="rover"
+            )
+        
+        # Right wheels
+        for i in range(3):
+            wheel_x = self.rover_x - body_width/2 + 20 + i * 30
+            wheel_y = self.rover_y - body_height/2 - wheel_radius + 3
+            
+            # Wheel
+            self.canvas.create_oval(
+                wheel_x - wheel_radius, wheel_y - wheel_radius,
+                wheel_x + wheel_radius, wheel_y + wheel_radius,
+                fill=wheel_color, outline='#666666', width=2, tags="rover"
+            )
+            
+            # Wheel center
+            self.canvas.create_oval(
+                wheel_x - 3, wheel_y - 3,
+                wheel_x + 3, wheel_y + 3,
+                fill='#666666', outline='#888888', tags="rover"
+            )
+        
+        # Solar panels
+        panel_width = body_width * 0.9
+        panel_height = 6
+        panel_y = self.rover_y - body_height/2 - 8
+        
+        self.canvas.create_rectangle(
+            self.rover_x - panel_width/2, panel_y - panel_height/2,
+            self.rover_x + panel_width/2, panel_y + panel_height/2,
+            fill='#1a1a4a', outline='#4a4aff', width=1, tags="rover"
+        )
+        
+        # Solar panel grid
+        for i in range(8):
+            x = self.rover_x - panel_width/2 + 10 + i * 15
+            self.canvas.create_line(x, panel_y - panel_height/2 + 1,
+                                  x, panel_y + panel_height/2 - 1,
+                                  fill='#6a6aff', width=1, tags="rover")
+        
+        # Antenna
+        antenna_x = self.rover_x + body_width/2 - 10
+        antenna_base_y = module_y - module_height/2
+        antenna_tip_y = antenna_base_y - 15
+        
+        self.canvas.create_line(antenna_x, antenna_base_y, antenna_x, antenna_tip_y,
+                              fill='#ffffff', width=3, tags="rover")
+        self.canvas.create_oval(antenna_x - 3, antenna_tip_y - 3,
+                              antenna_x + 3, antenna_tip_y + 3,
+                              fill='#ff0000', outline='#ffffff', tags="rover")
+        
+        # Front sensor array
+        sensor_x = self.rover_x + body_width/2 - 5
+        for i in range(3):
+            sensor_y = self.rover_y - 8 + i * 8
+            self.canvas.create_oval(sensor_x - 2, sensor_y - 2,
+                                  sensor_x + 2, sensor_y + 2,
+                                  fill='#00ff00', outline='#ffffff', tags="rover")
+        
+        # Direction indicator (enhanced arrow)
+        arrow_x = self.rover_x + body_width/2 + 8
+        arrow_points = [
+            arrow_x, self.rover_y,
+            arrow_x + 15, self.rover_y - 8,
+            arrow_x + 10, self.rover_y,
+            arrow_x + 15, self.rover_y + 8
+        ]
+        
+        self.canvas.create_polygon(arrow_points, fill='#ffff00', outline='#ffffff', width=2, tags="rover")
+        
+        # Rover identification label
+        self.canvas.create_text(self.rover_x, self.rover_y + 2,
+                              text="MARS ROVER", fill='#ffffff', 
+                              font=('Arial', 8, 'bold'), tags="rover")
+        
+        # Status indicator
+        status_x = self.rover_x - body_width/2 - 20
+        self.canvas.create_oval(status_x - 4, self.rover_y - 4,
+                              status_x + 4, self.rover_y + 4,
+                              fill='#00ff00', outline='#ffffff', width=1, tags="rover")
+        self.canvas.create_text(status_x, self.rover_y - 15,
+                              text="ACTIVE", fill='#00ff00', 
+                              font=('Arial', 7), tags="rover")
+
+    def update_sensors(self):
+        # Calculate rover edges
+        rover_left = self.rover_x - self.rover_width/2
+        rover_right = self.rover_x + self.rover_width/2
+        
+        # Reset all sensors
+        old_states = self.sensor_states.copy()
+        
+        # Calculate sensor line positions at center of each zone
+        front_sensor_x = self.start_x + self.front_zone_width / 2
+        middle_sensor_x = self.start_x + self.front_zone_width + self.middle_zone_width / 2
+        back_sensor_x = self.start_x + self.front_zone_width + self.middle_zone_width + self.back_zone_width / 2
+        
+        # Check presence sensors (trigger if any part of rover crosses sensor line)
+        self.sensor_states['PRESENCE_FRONT'] = rover_left <= front_sensor_x <= rover_right
+        self.sensor_states['PRESENCE_MIDDLE'] = rover_left <= middle_sensor_x <= rover_right
+        self.sensor_states['PRESENCE_BACK'] = rover_left <= back_sensor_x <= rover_right
+        
+        # Check gate safety sensors (based on rover edges, keep existing logic)
+        safety_zone_width = 60
+        
+        # Gate A safety
+        gate_a_pos = self.start_x + self.gate_a_x
+        if (rover_right > gate_a_pos - safety_zone_width/2 and 
+            rover_left < gate_a_pos + safety_zone_width/2):
+            self.sensor_states['GATE_SAFETY_A'] = True
+        else:
+            self.sensor_states['GATE_SAFETY_A'] = False
+        
+        # Gate B safety
+        gate_b_pos = self.start_x + self.gate_b_x
+        if (rover_right > gate_b_pos - safety_zone_width/2 and 
+            rover_left < gate_b_pos + safety_zone_width/2):
+            self.sensor_states['GATE_SAFETY_B'] = True
+        else:
+            self.sensor_states['GATE_SAFETY_B'] = False
+        
+        # Update sensor labels
+        for name, state in self.sensor_states.items():
+            if name in self.sensor_labels:
+                label = self.sensor_labels[name]
+                if state:
+                    label.config(text="ON", bg='#00ff00', fg='black')
+                else:
+                    label.config(text="OFF", bg='#4a4a4a', fg='white')
+        
+        # Update gate moving states in labels
+        self.sensor_labels['GATE_MOVING_A'].config(
+            text="ON" if self.gate_a_moving else "OFF",
+            bg='#00ff00' if self.gate_a_moving else '#4a4a4a',
+            fg='black' if self.gate_a_moving else 'white'
+        )
+        self.sensor_labels['GATE_MOVING_B'].config(
+            text="ON" if self.gate_b_moving else "OFF",
+            bg='#00ff00' if self.gate_b_moving else '#4a4a4a',
+            fg='black' if self.gate_b_moving else 'white'
+        )
+        
+        # Update gate request states in labels
+        self.sensor_labels['GATE_REQUEST_A'].config(
+            text="ON" if self.gate_requests['GATE_REQUEST_A'] else "OFF",
+            bg='#00ff00' if self.gate_requests['GATE_REQUEST_A'] else '#4a4a4a',
+            fg='black' if self.gate_requests['GATE_REQUEST_A'] else 'white'
+        )
+        self.sensor_labels['GATE_REQUEST_B'].config(
+            text="ON" if self.gate_requests['GATE_REQUEST_B'] else "OFF",
+            bg='#00ff00' if self.gate_requests['GATE_REQUEST_B'] else '#4a4a4a',
+            fg='black' if self.gate_requests['GATE_REQUEST_B'] else 'white'
+        )
+        
+        # Request throttled update instead of immediate update
+        self.request_update()
 
 if __name__ == "__main__":
     root = tk.Tk()
