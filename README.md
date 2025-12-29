@@ -2,7 +2,7 @@
 
 This repository contains the complete implementation for **European Rover Challenge 2025, Remote Formula, Challenge 2 - Infrastructure, Subtask 1: Airlock System**. The project includes a Hardware-in-the-Loop (HIL) simulator, firmware implementations, and comprehensive testing tools for developing and validating autonomous airlock control systems.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Airlock-Control-System-HIL-Testbench/
@@ -26,7 +26,7 @@ Airlock-Control-System-HIL-Testbench/
 └── README.md                    # This file
 ```
 
-## 🚀 Project Overview
+## Project Overview
 
 The airlock system is designed to safely transport a rover through a three-zone airlock with two automated gates. This implementation provides both simulation and real hardware testing capabilities for developing robust airlock control firmware for Mars rover operations.
 
@@ -38,7 +38,7 @@ The airlock system is designed to safely transport a rover through a three-zone 
 - **Bidirectional Operation**: Supports rover movement in both directions
 - **Real-time Communication**: Serial communication protocol for sensor data and gate commands
 
-## 🎯 Key Features
+## Key Features
 
 ### Airlock HIL Simulator (`src/gui/airlock_gui.py`)
 - **Visual Simulation**: Real-time 2D visualization of airlock zones, gates, and rover
@@ -72,7 +72,7 @@ The airlock system is designed to safely transport a rover through a three-zone 
 - **Gate Control**: Outputs gate requests based on internal logic
 - **Serial Communication**: Formatted data exchange with Python applications
 
-## 🛠️ Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 - Python 3.x
@@ -144,7 +144,7 @@ void executeLogic()
 }
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Launch HIL Simulator
 ```bash
@@ -161,7 +161,7 @@ python src/gui/arduino_gui.py
 2. Click "Connect" to establish serial communication
 3. Use mouse or arrow keys to move rover through airlock
 
-## 📡 Communication Protocol
+## Communication Protocol
 
 ### Data Format
 - **To Arduino**: `<PRESENCE_FRONT:1,PRESENCE_MIDDLE:0,PRESENCE_BACK:0,GATE_SAFETY_A:0,GATE_SAFETY_B:0,GATE_MOVING_A:0,GATE_MOVING_B:0>`
@@ -173,7 +173,7 @@ python src/gui/arduino_gui.py
 - **GATE_MOVING_A/B**: Indicates gate is currently in motion
 - **GATE_REQUEST_A/B**: Commands from controller to open/close gates
 
-## 🎮 Controls & Usage
+## Controls & Usage
 
 ### HIL Simulator Controls
 - **Mouse**: Click and drag rover to move it
@@ -186,14 +186,14 @@ python src/gui/arduino_gui.py
 - **Yellow**: Moving/Transitioning
 - **Dashed Lines**: Sensor trigger zones
 
-## 🧪 Testing Scenarios
+## Testing Scenarios
 
 1. **Basic Transit**: Move rover from front to back through both gates
 2. **Safety Test**: Position rover in gate safety zone and observe gate behavior
 3. **Bidirectional**: Test movement in both directions
 4. **Edge Cases**: Test behavior at zone boundaries
 
-## 🏆 European Rover Challenge Context
+## European Rover Challenge Context
 
 This implementation is designed for **ERC 2025 Challenge 2 - Infrastructure**, specifically addressing:
 
@@ -203,19 +203,19 @@ This implementation is designed for **ERC 2025 Challenge 2 - Infrastructure**, s
 - **Real-time Processing**: Sub-second response times for safety-critical operations
 - **Robust Communication**: Reliable serial protocol for sensor data exchange
 
-## 📚 Documentation
+## Documentation
 
 - **[docs/TECHNICAL_HANDBOOK.md](docs/TECHNICAL_HANDBOOK.md)**: ERC 2025 technical specifications
 - **[src/firmware/hil_esp32/AIRLOCK_README.md](src/firmware/hil_esp32/AIRLOCK_README.md)**: HIL-specific documentation
 - **Code Comments**: Extensive inline documentation in all source files
 
-## 🔧 Development Notes
+## Development Notes
 
 - Threading used for smooth animations and serial communication
 - Frame-rate independent gate animations
 - Comprehensive error handling for serial communication
 
-## ⚠️ Safety Considerations
+## Safety Considerations
 
 - Gates never open simultaneously
 - Safety sensors prevent gate closure when rover is present
@@ -223,12 +223,12 @@ This implementation is designed for **ERC 2025 Challenge 2 - Infrastructure**, s
 - Visual warnings for unsafe conditions
 - Comprehensive logging for debugging
 
-## 📜 License
+## License
 
 Developed for European Rover Challenge 2025 competition. See competition rules for usage guidelines.
 
 ---
 
-**Team**: NSPACE  
+**Team**: NSpace  
 **Competition**: European Rover Challenge 2025 - Remote Formula  
 **Challenge**: Infrastructure - Airlock System
