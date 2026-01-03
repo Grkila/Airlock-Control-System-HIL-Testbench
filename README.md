@@ -179,12 +179,6 @@ This implementation is designed for **ERC 2025 Challenge 2 - Infrastructure**, s
 - **Real-time Processing**: Sub-second response times for safety-critical operations
 - **Robust Communication**: Reliable serial protocol for sensor data exchange
 
-## Documentation
-
-- **[docs/TECHNICAL_HANDBOOK.md](docs/TECHNICAL_HANDBOOK.md)**: ERC 2025 technical specifications
-- **[src/firmware/hil_esp32/AIRLOCK_README.md](src/firmware/hil_esp32/AIRLOCK_README.md)**: HIL-specific documentation
-- **Code Comments**: Extensive inline documentation in all source files
-
 ## Project Structure
 
 ```
@@ -208,6 +202,13 @@ Airlock-Control-System-HIL-Testbench/
 ├── .gitignore                   # Git ignore patterns
 └── README.md                    # This file
 ```
+
+## Documentation
+
+- **[docs/TECHNICAL_HANDBOOK.md](docs/TECHNICAL_HANDBOOK.md)**: ERC 2025 technical specifications
+- **[src/firmware/hil_esp32/AIRLOCK_README.md](src/firmware/hil_esp32/AIRLOCK_README.md)**: HIL-specific documentation
+- **Code Comments**: Extensive inline documentation in all source files
+
 
 ## Development Notes
 
