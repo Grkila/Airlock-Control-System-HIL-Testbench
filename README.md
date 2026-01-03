@@ -2,30 +2,6 @@
 
 This repository contains the complete implementation for **European Rover Challenge 2025, Remote Formula, Challenge 2 - Infrastructure, Subtask 1: Airlock System**. The project includes a Hardware-in-the-Loop (HIL) simulator, firmware implementations, and comprehensive testing tools for developing and validating autonomous airlock control systems.
 
-## Project Structure
-
-```
-Airlock-Control-System-HIL-Testbench/
-├── src/                          # Source code
-│   ├── gui/                      # Python GUI applications
-│   │   ├── airlock_gui.py       # HIL simulator with visual interface
-│   │   └── arduino_gui.py       # Manual control panel for testing
-│   └── firmware/                 # Arduino/ESP32 firmware
-│       ├── control_unit/         # Main airlock control logic
-│       │   └── Control_unit.ino
-│       └── hil_esp32/            # Hardware-in-the-Loop simulator
-│           ├── HIL_ESP32.ino
-│           └── AIRLOCK_README.md
-├── docs/                         # Documentation and assets
-│   ├── images/                   # Diagrams and screenshots
-│   │   ├── HIL_wiring.png       # Hardware wiring diagram
-│   │   └── UI_screenshot.png    # GUI interface screenshot
-│   └── TECHNICAL_HANDBOOK.md     # ERC 2025 technical specifications
-├── requirements.txt              # Python dependencies
-├── .gitignore                   # Git ignore patterns
-└── README.md                    # This file
-```
-
 ## Project Overview
 
 The airlock system is designed to safely transport a rover through a three-zone airlock with two automated gates. This implementation provides both simulation and real hardware testing capabilities for developing robust airlock control firmware for Mars rover operations.
@@ -208,6 +184,30 @@ This implementation is designed for **ERC 2025 Challenge 2 - Infrastructure**, s
 - **[docs/TECHNICAL_HANDBOOK.md](docs/TECHNICAL_HANDBOOK.md)**: ERC 2025 technical specifications
 - **[src/firmware/hil_esp32/AIRLOCK_README.md](src/firmware/hil_esp32/AIRLOCK_README.md)**: HIL-specific documentation
 - **Code Comments**: Extensive inline documentation in all source files
+
+## Project Structure
+
+```
+Airlock-Control-System-HIL-Testbench/
+├── src/                          # Source code
+│   ├── gui/                      # Python GUI applications
+│   │   ├── airlock_gui.py       # HIL simulator with visual interface
+│   │   └── arduino_gui.py       # Manual control panel for testing
+│   └── firmware/                 # Arduino/ESP32 firmware
+│       ├── control_unit/         # Main airlock control logic
+│       │   └── Control_unit.ino
+│       └── hil_esp32/            # Hardware-in-the-Loop simulator
+│           ├── HIL_ESP32.ino
+│           └── AIRLOCK_README.md
+├── docs/                         # Documentation and assets
+│   ├── images/                   # Diagrams and screenshots
+│   │   ├── HIL_wiring.png       # Hardware wiring diagram
+│   │   └── UI_screenshot.png    # GUI interface screenshot
+│   └── TECHNICAL_HANDBOOK.md     # ERC 2025 technical specifications
+├── requirements.txt              # Python dependencies
+├── .gitignore                   # Git ignore patterns
+└── README.md                    # This file
+```
 
 ## Development Notes
 
